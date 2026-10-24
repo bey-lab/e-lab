@@ -30,7 +30,11 @@ input{padding:11px;border:1px solid #536385;background:#111a32;color:#fff;border
 <div class="line"></div>
 <div><div class="sub">作品の現在の状態</div><div class="row"><button data-status="制作中">制作中</button><button data-status="完成">完成</button><button data-status="凍結">凍結</button><button data-status="ボツ">ボツ</button></div><p class="small">完成・凍結・ボツは評価ではなく状態です。変更履歴は残ります。いつでも制作中に戻せます。</p></div>
 <div class="message" id="rightMessage">律「提出された観測値をそのまま保存します」</div>
-<div class="row between"><b>観測履歴</b><span class="small" id="eventCount"></span></div><div id="events"></div>
+<div class="row between"><b>観測履歴</b><span class="small" id="eventCount"></span></div>
+<div class="row between"><label class="small" for="eventFilter">表示する記録</label><select id="eventFilter" style="background:#111a32;color:#edf1ff;border:1px solid #536385;border-radius:9px;padding:8px">
+<option value="all">すべて</option><option value="score">気分</option><option value="phase">工程</option><option value="status">作品状態</option><option value="operation">開始・休憩・再開</option></select></div>
+<div id="events"></div><button id="moreEvents" class="ghost hidden">さらに10件表示</button>
+<p class="small">ここで表示を省略しても、観測履歴の保存件数は減りません。</p>
 <details><summary>この作品のバックアップ・削除</summary><div class="row"><button id="oneExport">作品JSONを保存</button><label class="filebutton">作品JSONを復元<input type="file" accept=".json,application/json" hidden id="oneImport"></label><button class="danger" id="deleteBtn">作品を削除</button></div><p class="small">削除は観測データごと消去します。削除前に作品JSONを保存することをおすすめします。</p></details>
 </div></main></div><p class="small">© E-lab / 試験設備。観測は厳密に、報告はふわっと。</p></div>
 <script src="./works-store-v02.js"></script>
@@ -39,7 +43,7 @@ input{padding:11px;border:1px solid #536385;background:#111a32;color:#fff;border
 const $=id=>document.getElementById(id), S=window.ElabWorksStore;
 if(!S){alert('保存モジュールが読み込めませんでした');return}
 const phases=S.PHASES;
-let chosen=null,score=7,phase='ラフ',moodComment=null;
+let chosen=null,score=7,phase='ラフ',moodComment=null,visibleEvents=10;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const stamp=t=>new Date(t).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
 const fmt=ms=>{let n=Math.max(0,Math.floor(ms/1000));return [Math.floor(n/3600),Math.floor(n/60)%60,n%60].map(x=>String(x).padStart(2,'0')).join(':')};
@@ -51,7 +55,7 @@ function elapsed(w){if(!w)return 0;let sum=0,from=null;for(const e of w.events){
 function operate(task){try{task();render()}catch(err){alert('記録できませんでした。\n'+err.message)}}
 function current(){return chosen?S.get(chosen):null}
 function setPhaseFrom(w){phase=evs(w).filter(e=>e.type==='phase').at(-1)?.value||'ラフ'}
-function select(id){const prev=current();if(prev&&prev.id!==id&&running(prev))S.observe(prev.id,'pause',{reason:'作品切替'});chosen=id;setPhaseFrom(current());moodComment=null;render()}
+function select(id){const prev=current();if(prev&&prev.id!==id&&running(prev))S.observe(prev.id,'pause',{reason:'作品切替'});chosen=id;setPhaseFrom(current());moodComment=null;visibleEvents=10;$('eventFilter').value='all';render()}
 function emit(type,extra={}){S.observe(chosen,type,extra)}
 function begin(){operate(()=>{const w=current();if(!w||w.status!=='制作中')return;if(!started(w)){emit('start');emit('phase',{value:phase})}else if(!running(w)){emit('resume')}moodComment=null})}
 function pause(){operate(()=>{if(running(current()))emit('pause');moodComment=null})}
@@ -62,6 +66,8 @@ function fileRead(file,fn){if(!file)return;file.text().then(text=>operate(()=>fn
 $('newForm').onsubmit=e=>{e.preventDefault();operate(()=>{const w=S.create($('newTitle').value);$('newTitle').value='';select(w.id)})};
 $('renameBtn').onclick=()=>operate(()=>S.rename(chosen,$('editTitle').value));
 $('beginBtn').onclick=begin;$('pauseBtn').onclick=pause;$('resumeBtn').onclick=resume;
+$('eventFilter').onchange=()=>{visibleEvents=10;render()};
+$('moreEvents').onclick=()=>{visibleEvents+=10;render()};
 phases.forEach(p=>{const b=document.createElement('button');b.textContent=p;b.onclick=()=>operate(()=>{if(!running(current()))return;phase=p;emit('phase',{value:p})});$('phaseBtns').appendChild(b)});
 for(let i=1;i<=10;i++){const b=document.createElement('button');b.textContent=i;b.onclick=()=>{score=i;render()};$('scoreBtns').appendChild(b)}
 $('saveMoodBtn').onclick=()=>operate(()=>{emit('score',{value:score,phase});moodComment=score<=3?'今日は雲が低いようですねえ……':score>=8?'おひさまが見えるようです！':'ふむふむ、観測できました！'});
@@ -89,7 +95,12 @@ const lastMood=evs(w).filter(e=>e.type==='score').at(-1);
 $('leftMessage').textContent='こころ「'+(moodComment||(lastMood?.value<=3?'今日は静かな観測ですねえ……':'今日は何が見つかるでしょうね！'))+'」';
 $('rightMessage').textContent='律「'+(lastMood?'直近の気分は'+lastMood.value+'です。理由は不明です。':'まだ気分の観測値はありません。')+'」';
 const names={start:'制作開始',pause:'休憩',resume:'制作再開',finish:'終了',phase:'工程変更',score:'気分観測',status:'作品状態'};
-$('events').innerHTML=w.events.slice().reverse().map(e=>'<div class="event"><time>'+stamp(e.t)+'</time>　'+esc(names[e.type]||e.type)+'　'+esc(e.type==='score'?e.value+' / 10':e.value||e.reason||'')+'</div>').join('');
+const filter=$('eventFilter').value;
+const matching=w.events.filter(e=>filter==='all'||e.type===filter||(filter==='operation'&&['start','pause','resume','finish'].includes(e.type))).reverse();
+$('eventCount').textContent=w.events.length+'件保存 / '+matching.length+'件該当';
+$('events').innerHTML=matching.slice(0,visibleEvents).map(e=>'<div class="event"><time>'+stamp(e.t)+'</time>　'+esc(names[e.type]||e.type)+'　'+esc(e.type==='score'?e.value+' / 10':e.value||e.reason||'')+'</div>').join('')||(w.events.length?'該当する記録はありません。':'まだ観測履歴がありません。');
+$('moreEvents').classList.toggle('hidden',matching.length<=visibleEvents);
+$('moreEvents').textContent='さらに10件表示（残り'+Math.max(0,matching.length-visibleEvents)+'件）';
 }
 render();setInterval(()=>{const w=current();if(w&&running(w))$('timer').textContent=fmt(elapsed(w))},1000);
 })();
