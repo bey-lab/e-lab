@@ -28,6 +28,14 @@ input{padding:11px;border:1px solid #536385;background:#111a32;color:#fff;border
 <div><div class="sub">現在の工程（戻っても問題ありません）</div><div id="phaseBtns" class="phases"></div></div>
 <div><div class="row between"><span class="sub">今のイイ感じ！</span><b id="scoreLabel">7 / 10</b></div><div id="scoreBtns" class="scores"></div><button id="saveMoodBtn" class="primary" style="width:100%;margin-top:9px">＋ 今の気分を観測する</button></div>
 <div class="line"></div>
+<section class="stack"><div class="row between"><b>🖼️ 画像観測室</b><span class="small" id="imageCount">0枚</span></div>
+<label class="filebutton" style="text-align:center;background:#5669a4">＋ 画像を登録（この作品へ）<input id="imageInput" type="file" accept="image/*" hidden></label>
+<div class="small">画像はこのiPadのブラウザ内に保存します。現在のJSONバックアップには画像本体が含まれません。大切な元画像はProcreate等にも保管してください。</div>
+<div id="imageError" class="notice hidden" role="alert"></div>
+<div id="latestImage" class="message">まだ画像は届いていません。</div>
+<div id="imageGallery" class="row" style="align-items:stretch"></div>
+</section>
+<div class="line"></div>
 <div><div class="sub">作品の現在の状態</div><div class="row"><button data-status="制作中">制作中</button><button data-status="完成">完成</button><button data-status="凍結">凍結</button><button data-status="ボツ">ボツ</button></div><p class="small">完成・凍結・ボツは評価ではなく状態です。変更履歴は残ります。いつでも制作中に戻せます。</p></div>
 <div class="message" id="rightMessage">律「提出された観測値をそのまま保存します」</div>
 <div class="row between"><b>観測履歴</b><span class="small" id="eventCount"></span></div>
@@ -38,12 +46,13 @@ input{padding:11px;border:1px solid #536385;background:#111a32;color:#fff;border
 <details><summary>この作品のバックアップ・削除</summary><div class="row"><button id="oneExport">作品JSONを保存</button><label class="filebutton">作品JSONを復元<input type="file" accept=".json,application/json" hidden id="oneImport"></label><button class="danger" id="deleteBtn">作品を削除</button></div><p class="small">削除は観測データごと消去します。削除前に作品JSONを保存することをおすすめします。</p></details>
 </div></main></div><p class="small">© E-lab / 試験設備。観測は厳密に、報告はふわっと。</p></div>
 <script src="./works-store-v02.js"></script>
+<script src="./images-v03.js"></script>
 <script>
 (()=>{'use strict';
-const $=id=>document.getElementById(id), S=window.ElabWorksStore;
+const $=id=>document.getElementById(id), S=window.ElabWorksStore, I=window.ElabImageStore;
 if(!S){alert('保存モジュールが読み込めませんでした');return}
 const phases=S.PHASES;
-let chosen=null,score=7,phase='ラフ',moodComment=null,visibleEvents=10;
+let chosen=null,score=7,phase='ラフ',moodComment=null,visibleEvents=10,imageRequest=0,imageUrls=[];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const stamp=t=>new Date(t).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
 const fmt=ms=>{let n=Math.max(0,Math.floor(ms/1000));return [Math.floor(n/3600),Math.floor(n/60)%60,n%60].map(x=>String(x).padStart(2,'0')).join(':')};
@@ -55,12 +64,49 @@ function elapsed(w){if(!w)return 0;let sum=0,from=null;for(const e of w.events){
 function operate(task){try{task();render()}catch(err){alert('記録できませんでした。\n'+err.message)}}
 function current(){return chosen?S.get(chosen):null}
 function setPhaseFrom(w){phase=evs(w).filter(e=>e.type==='phase').at(-1)?.value||'ラフ'}
-function select(id){const prev=current();if(prev&&prev.id!==id&&running(prev))S.observe(prev.id,'pause',{reason:'作品切替'});chosen=id;setPhaseFrom(current());moodComment=null;visibleEvents=10;$('eventFilter').value='all';render()}
+function select(id){const prev=current();if(prev&&prev.id!==id&&running(prev))S.observe(prev.id,'pause',{reason:'作品切替'});chosen=id;setPhaseFrom(current());moodComment=null;visibleEvents=10;$('eventFilter').value='all';render();showImages(id)}
 function emit(type,extra={}){S.observe(chosen,type,extra)}
 function begin(){operate(()=>{const w=current();if(!w||w.status!=='制作中')return;if(!started(w)){emit('start');emit('phase',{value:phase})}else if(!running(w)){emit('resume')}moodComment=null})}
 function pause(){operate(()=>{if(running(current()))emit('pause');moodComment=null})}
 function resume(){operate(()=>{const w=current();if(!w||w.status!=='制作中')return;if(started(w)&&!running(w))emit('resume');moodComment=null})}
 function changeStatus(status){operate(()=>{const w=current();if(!w||w.status===status)return;if(running(w))emit('pause',{reason:'状態変更'});S.setStatus(chosen,status);moodComment=null})}
+function clearImageUrls(){for(const url of imageUrls)URL.revokeObjectURL(url);imageUrls=[]}
+async function showImages(workId){
+ const token=++imageRequest;clearImageUrls();
+ $('imageError').classList.add('hidden');$('imageCount').textContent='読み込み中';$('imageGallery').replaceChildren();$('latestImage').textContent='画像を確認しています…';
+ try{
+   if(!I)throw Error('画像管理モジュールが読み込まれていません');
+   const images=await I.list(workId);if(token!==imageRequest||chosen!==workId)return;
+   $('imageCount').textContent=images.length+'枚';
+   $('latestImage').replaceChildren();
+   if(!images.length){$('latestImage').textContent='まだ画像は届いていません。';return}
+   const newest=images[0],head=document.createElement('div'),pic=document.createElement('img');
+   pic.src=URL.createObjectURL(newest.blob);imageUrls.push(pic.src);pic.alt='最新観測画像';pic.style.cssText='width:100%;max-height:390px;object-fit:contain;border-radius:10px';
+   head.textContent='最新の観測画像：'+newest.name+' / '+newest.width+'×'+newest.height+'px / '+stamp(newest.createdAt);
+   $('latestImage').append(head,pic);
+   for(const im of images){
+     const card=document.createElement('div');card.style.cssText='width:110px;min-width:110px;background:#2d3858;padding:6px;border-radius:9px;display:grid;gap:5px';
+     const thumb=document.createElement('img');thumb.src=URL.createObjectURL(im.blob);imageUrls.push(thumb.src);thumb.style.cssText='width:100%;height:90px;object-fit:contain';thumb.alt=im.name;
+     thumb.onclick=()=>{const newpic=$('latestImage').querySelector('img');if(newpic)newpic.src=thumb.src;};
+     const info=document.createElement('div');info.className='small';info.textContent=stamp(im.createdAt)+' '+(im.phase||'工程不明');
+     const del=document.createElement('button');del.className='danger';del.textContent='削除';del.style.padding='6px';del.onclick=async()=>{if(!confirm('この画像を端末内の保存場所から削除しますか？ この操作は戻せません。'))return;try{await I.remove(im.id);await showImages(workId)}catch(e){alert('画像を削除できませんでした: '+e.message)}};
+     card.append(thumb,info,del);$('imageGallery').append(card);
+   }
+ }catch(e){if(token!==imageRequest)return;$('imageCount').textContent='読み込み失敗';$('latestImage').textContent='画像を表示できません';$('imageError').textContent=e.message;$('imageError').classList.remove('hidden')}
+}
+$('imageInput').onchange=async e=>{
+ const file=e.target.files[0];e.target.value='';if(!file||!chosen)return;
+ const workId=chosen;const btn=$('imageInput').closest('label');btn.style.opacity='.45';
+ try{
+  const w=S.get(workId);if(!w)throw Error('作品がありません');
+  const prevScore=w.events.filter(ev=>ev.type==='score').at(-1)?.value??null;
+  const image=await I.add(workId,file,phase,prevScore);
+  try{S.observe(workId,'image',{imageId:image.id,name:image.name,phase,score:prevScore})}
+  catch(err){alert('画像は保存されましたが、観測履歴への記録が失敗しました。画像は削除せず保管しています。理由: '+err.message)}
+  if(chosen===workId){render();await showImages(workId)}
+ }catch(err){$('imageError').textContent='画像保存エラー: '+err.message;$('imageError').classList.remove('hidden')}
+ finally{btn.style.opacity='1'}
+};
 function download(name,json){const blob=new Blob([json],{type:'application/json'});const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),2500)}
 function fileRead(file,fn){if(!file)return;file.text().then(text=>operate(()=>fn(text))).catch(e=>alert('読み込みに失敗しました: '+e.message))}
 $('newForm').onsubmit=e=>{e.preventDefault();operate(()=>{const w=S.create($('newTitle').value);$('newTitle').value='';select(w.id)})};
@@ -76,11 +122,11 @@ $('oneExport').onclick=()=>operate(()=>download('E-lab-work-'+chosen+'.json',S.e
 $('allExport').onclick=()=>operate(()=>download('E-lab-all-works-'+new Date().toISOString().slice(0,10)+'.json',S.exportAll()));
 $('oneImport').onchange=e=>{const file=e.target.files[0];fileRead(file,text=>{const doc=JSON.parse(text),id=doc.work?.id,exists=id&&S.get(id);if(exists&&!confirm('同じ作品IDが存在します。バックアップの内容で上書きしますか？'))return;S.importWork(doc,{replace:!!exists});select(id)});e.target.value=''};
 $('allImport').onchange=e=>{const file=e.target.files[0];fileRead(file,text=>{const doc=JSON.parse(text);if(!confirm('現在の全作品が置き換わります。事前にバックアップを取りましたか？'))return;S.importAll(doc,{replace:true});chosen=null});e.target.value=''};
-$('deleteBtn').onclick=()=>operate(()=>{const w=current();if(!w)return;if(!confirm('作品「'+w.title+'」と全観測履歴を削除しますか？'))return;if(!confirm('この操作は元に戻せません。バックアップを確認しましたか？'))return;S.remove(chosen);chosen=null});
+$('deleteBtn').onclick=()=>operate(()=>{const w=current();if(!w)return;if(!confirm('作品「'+w.title+'」と全観測履歴を削除しますか？'))return;if(!confirm('この操作は元に戻せません。バックアップを確認しましたか？'))return;alert('画像ファイルは別保存です。画像を削除する場合は、先に画像観測室から削除してください。');S.remove(chosen);chosen=null});
 function render(){const works=S.list(),w=current();$('workCount').textContent='登録作品 '+works.length+' 件';$('workList').innerHTML=works.length?'':'<div class="sub">まだ作品がありません。</div>';
 for(const p of works){const b=document.createElement('button');b.className='work'+(p.id===chosen?' selected':'');b.innerHTML='<b>'+esc(p.title)+'</b><span>'+esc(p.status)+' ・ 気分 '+evs(p).filter(e=>e.type==='score').length+'件 ・ '+stamp(p.createdAt)+'</span>';b.onclick=()=>operate(()=>select(p.id));$('workList').appendChild(b)}
 $('emptyState').classList.toggle('hidden',!!w);$('workspace').classList.toggle('hidden',!w);$('workStatus').textContent=w?w.status:'未選択';
-if(!w)return;
+if(!w){++imageRequest;clearImageUrls();return;}
 if(document.activeElement!==$('editTitle'))$('editTitle').value=w.title;
 const run=running(w),has=started(w),open=w.status==='制作中';
 $('runningState').textContent=run?'観測中':has?'休憩中':'未開始';
@@ -94,11 +140,11 @@ document.querySelectorAll('[data-status]').forEach(b=>b.classList.toggle('active
 const lastMood=evs(w).filter(e=>e.type==='score').at(-1);
 $('leftMessage').textContent='こころ「'+(moodComment||(lastMood?.value<=3?'今日は静かな観測ですねえ……':'今日は何が見つかるでしょうね！'))+'」';
 $('rightMessage').textContent='律「'+(lastMood?'直近の気分は'+lastMood.value+'です。理由は不明です。':'まだ気分の観測値はありません。')+'」';
-const names={start:'制作開始',pause:'休憩',resume:'制作再開',finish:'終了',phase:'工程変更',score:'気分観測',status:'作品状態'};
+const names={start:'制作開始',pause:'休憩',resume:'制作再開',finish:'終了',phase:'工程変更',score:'気分観測',status:'作品状態',image:'画像観測'};
 const filter=$('eventFilter').value;
 const matching=w.events.filter(e=>filter==='all'||e.type===filter||(filter==='operation'&&['start','pause','resume','finish'].includes(e.type))).reverse();
 $('eventCount').textContent=w.events.length+'件保存 / '+matching.length+'件該当';
-$('events').innerHTML=matching.slice(0,visibleEvents).map(e=>'<div class="event"><time>'+stamp(e.t)+'</time>　'+esc(names[e.type]||e.type)+'　'+esc(e.type==='score'?e.value+' / 10':e.value||e.reason||'')+'</div>').join('')||(w.events.length?'該当する記録はありません。':'まだ観測履歴がありません。');
+$('events').innerHTML=matching.slice(0,visibleEvents).map(e=>'<div class="event"><time>'+stamp(e.t)+'</time>　'+esc(names[e.type]||e.type)+'　'+esc(e.type==='score'?e.value+' / 10':e.type==='image'?e.name||'画像':e.value||e.reason||'')+'</div>').join('')||(w.events.length?'該当する記録はありません。':'まだ観測履歴がありません。');
 $('moreEvents').classList.toggle('hidden',matching.length<=visibleEvents);
 $('moreEvents').textContent='さらに10件表示（残り'+Math.max(0,matching.length-visibleEvents)+'件）';
 }
