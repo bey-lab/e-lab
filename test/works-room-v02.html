@@ -33,6 +33,10 @@ input{padding:11px;border:1px solid #536385;background:#111a32;color:#fff;border
 <div class="small">画像はこのiPadのブラウザ内に保存します。現在のJSONバックアップには画像本体が含まれません。大切な元画像はProcreate等にも保管してください。</div>
 <div id="imageError" class="notice hidden" role="alert"></div>
 <div id="latestImage" class="message">まだ画像は届いていません。</div>
+<div class="message stack" id="colorReport" style="gap:8px"><b>🎨 色帯観測装置</b><div id="colorReportText" class="small">画像が登録されると色を数えます。</div>
+<div id="colorBar" class="row" style="gap:0;overflow:hidden;border-radius:9px;height:28px;background:#394463"></div>
+<div id="colorLegend" class="row" style="gap:10px"></div><div id="colorTalk" class="small"></div>
+<div class="small">画像を縮小して画素の色を大分類した概算値です。色の良し悪しは評価しません。透過部分は集計対象外です。</div></div>
 <div id="imageGallery" class="row" style="align-items:stretch"></div>
 </section>
 <div class="line"></div>
@@ -47,12 +51,13 @@ input{padding:11px;border:1px solid #536385;background:#111a32;color:#fff;border
 </div></main></div><p class="small">© E-lab / 試験設備。観測は厳密に、報告はふわっと。</p></div>
 <script src="./works-store-v02.js"></script>
 <script src="./images-v03.js"></script>
+<script src="./color-band-v01.js"></script>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id), S=window.ElabWorksStore, I=window.ElabImageStore;
 if(!S){alert('保存モジュールが読み込めませんでした');return}
 const phases=S.PHASES;
-let chosen=null,score=7,phase='ラフ',moodComment=null,visibleEvents=10,imageRequest=0,imageUrls=[];
+let chosen=null,score=7,phase='ラフ',moodComment=null,visibleEvents=10,imageRequest=0,imageUrls=[],colorRequest=0;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const stamp=t=>new Date(t).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
 const fmt=ms=>{let n=Math.max(0,Math.floor(ms/1000));return [Math.floor(n/3600),Math.floor(n/60)%60,n%60].map(x=>String(x).padStart(2,'0')).join(':')};
@@ -71,23 +76,42 @@ function pause(){operate(()=>{if(running(current()))emit('pause');moodComment=nu
 function resume(){operate(()=>{const w=current();if(!w||w.status!=='制作中')return;if(started(w)&&!running(w))emit('resume');moodComment=null})}
 function changeStatus(status){operate(()=>{const w=current();if(!w||w.status===status)return;if(running(w))emit('pause',{reason:'状態変更'});S.setStatus(chosen,status);moodComment=null})}
 function clearImageUrls(){for(const url of imageUrls)URL.revokeObjectURL(url);imageUrls=[]}
+async function showColor(image,workId){
+ const token=++colorRequest;
+ $('colorReportText').textContent='色を観測しています…';
+ $('colorBar').replaceChildren();$('colorLegend').replaceChildren();$('colorTalk').textContent='';
+ try{
+  if(!window.ElabColorBand)throw Error('色帯解析モジュールが読み込まれていません');
+  const result=await window.ElabColorBand.analyze(image.blob);
+  if(token!==colorRequest||chosen!==workId)return;
+  if(!result.total){$('colorReportText').textContent=result.message;return}
+  $('colorReportText').textContent='主な使用色（概算）';
+  for(const part of result.segments){
+   const item=document.createElement('div');item.style.flex=String(part.ratio);item.style.background=part.color;item.title=part.name+' '+part.ratio.toFixed(1)+'%';
+   $('colorBar').appendChild(item);
+   const txt=document.createElement('span');txt.className='small';txt.textContent=part.name+' '+part.ratio.toFixed(1)+'%';
+   $('colorLegend').appendChild(txt);
+  }
+  $('colorTalk').textContent='律「'+result.message+'」　こころ「色が見つかりましたねえ……！」';
+ }catch(e){if(token!==colorRequest)return;$('colorReportText').textContent='解析できませんでした：'+e.message}
+}
 async function showImages(workId){
- const token=++imageRequest;clearImageUrls();
+ const token=++imageRequest;++colorRequest;clearImageUrls();
  $('imageError').classList.add('hidden');$('imageCount').textContent='読み込み中';$('imageGallery').replaceChildren();$('latestImage').textContent='画像を確認しています…';
  try{
    if(!I)throw Error('画像管理モジュールが読み込まれていません');
    const images=await I.list(workId);if(token!==imageRequest||chosen!==workId)return;
    $('imageCount').textContent=images.length+'枚';
    $('latestImage').replaceChildren();
-   if(!images.length){$('latestImage').textContent='まだ画像は届いていません。';return}
+   if(!images.length){$('latestImage').textContent='まだ画像は届いていません。';$('colorReportText').textContent='画像が登録されると色を数えます。';$('colorBar').replaceChildren();$('colorLegend').replaceChildren();$('colorTalk').textContent='';return}
    const newest=images[0],head=document.createElement('div'),pic=document.createElement('img');
    pic.src=URL.createObjectURL(newest.blob);imageUrls.push(pic.src);pic.alt='最新観測画像';pic.style.cssText='width:100%;max-height:390px;object-fit:contain;border-radius:10px';
    head.textContent='最新の観測画像：'+newest.name+' / '+newest.width+'×'+newest.height+'px / '+stamp(newest.createdAt);
-   $('latestImage').append(head,pic);
+   $('latestImage').append(head,pic);showColor(newest,workId);
    for(const im of images){
      const card=document.createElement('div');card.style.cssText='width:110px;min-width:110px;background:#2d3858;padding:6px;border-radius:9px;display:grid;gap:5px';
      const thumb=document.createElement('img');thumb.src=URL.createObjectURL(im.blob);imageUrls.push(thumb.src);thumb.style.cssText='width:100%;height:90px;object-fit:contain';thumb.alt=im.name;
-     thumb.onclick=()=>{const newpic=$('latestImage').querySelector('img');if(newpic)newpic.src=thumb.src;};
+     thumb.onclick=()=>{const newpic=$('latestImage').querySelector('img');if(newpic)newpic.src=thumb.src;showColor(im,workId);};
      const info=document.createElement('div');info.className='small';info.textContent=stamp(im.createdAt)+' '+(im.phase||'工程不明');
      const del=document.createElement('button');del.className='danger';del.textContent='削除';del.style.padding='6px';del.onclick=async()=>{if(!confirm('この画像を端末内の保存場所から削除しますか？ この操作は戻せません。'))return;try{await I.remove(im.id);await showImages(workId)}catch(e){alert('画像を削除できませんでした: '+e.message)}};
      card.append(thumb,info,del);$('imageGallery').append(card);
@@ -126,7 +150,7 @@ $('deleteBtn').onclick=()=>operate(()=>{const w=current();if(!w)return;if(!confi
 function render(){const works=S.list(),w=current();$('workCount').textContent='登録作品 '+works.length+' 件';$('workList').innerHTML=works.length?'':'<div class="sub">まだ作品がありません。</div>';
 for(const p of works){const b=document.createElement('button');b.className='work'+(p.id===chosen?' selected':'');b.innerHTML='<b>'+esc(p.title)+'</b><span>'+esc(p.status)+' ・ 気分 '+evs(p).filter(e=>e.type==='score').length+'件 ・ '+stamp(p.createdAt)+'</span>';b.onclick=()=>operate(()=>select(p.id));$('workList').appendChild(b)}
 $('emptyState').classList.toggle('hidden',!!w);$('workspace').classList.toggle('hidden',!w);$('workStatus').textContent=w?w.status:'未選択';
-if(!w){++imageRequest;clearImageUrls();return;}
+if(!w){++imageRequest;++colorRequest;clearImageUrls();return;}
 if(document.activeElement!==$('editTitle'))$('editTitle').value=w.title;
 const run=running(w),has=started(w),open=w.status==='制作中';
 $('runningState').textContent=run?'観測中':has?'休憩中':'未開始';
