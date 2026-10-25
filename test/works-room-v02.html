@@ -11,6 +11,11 @@ input{padding:11px;border:1px solid #536385;background:#111a32;color:#fff;border
 @media(max-width:920px){.layout{grid-template-columns:1fr 1fr}.observatory{grid-column:1/-1;grid-row:1}.researcher-right{grid-column:2;grid-row:2}.work-left{grid-column:1;grid-row:2}}@media(max-width:760px){.layout{grid-template-columns:1fr}.observatory,.researcher-right,.work-left{grid-column:1;grid-row:auto}.wrap{padding:11px}.panel{padding:12px}.head{align-items:flex-start}.timer{font-size:21px}}
 <style>
 /* E-lab 観測室 — character-first layout */
+.staff-setup-banner{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 20px;margin:16px 0 0;background:linear-gradient(110deg,#34456d,#243457);border:1px solid #a0b4e3;border-radius:15px}
+.staff-setup-banner .small{margin:3px 0;max-width:600px}
+.staff-import-button{background:#a8b9f4!important;color:#162040!important;font-weight:800!important;white-space:nowrap}
+.staff-setup-banner.hidden{display:none!important}
+
 :root{--rim:#4e6197;--shine:#9baef6}
 .wrap{max-width:1540px;padding:20px 18px}
 body{background:radial-gradient(ellipse 70% 55% at 50% 0%,#26365f 0%,#151d37 55%,#0e1429 100%)}
@@ -65,6 +70,10 @@ body.wardrobe-open .wardrobe-screen{display:block}
 </div>
 <div class="staff-tools"><details><summary>衣装画像の登録・追加</summary><label class="filebutton" style="background:#7489cf;color:#0e1730;font-weight:750">衣装6枚セット（ZIP）を登録<input id="researcherZipInput" type="file" accept=".zip,application/zip" hidden></label><div class="staff-note" style="padding:7px 0">または</div><label class="filebutton">PNGを6枚まとめて登録<input id="researcherFilesInput" type="file" accept="image/png,image/webp,image/jpeg" multiple hidden></label><p id="researcherSheetStatus" class="staff-note">前のメッセージのZIPを保存し、ここで選ぶだけで6人分を登録できます。一度登録すれば衣装を切り替えられます。</p><p class="staff-note">衣装画像はこのiPadのブラウザ内に保存されます。作品の観測記録とは別です。</p></details></div>
 <p class="staff-note" style="text-align:center">現在は端末内保存。衣装PNGも作品観測のJSONバックアップには含まれません。</p>
+</section><section id="staffSetupBanner" class="staff-setup-banner hidden" aria-live="polite">
+<div><b>🔬 研究員の立ち絵がまだ登録されていません</b><p class="small">最初の一度だけ、6枚セットのZIPを読み込めば二人が出勤します。作品の観測データは変更しません。</p></div>
+<label class="filebutton staff-import-button">📦 6枚セットZIPを選ぶ<input id="staffQuickZipInput" type="file" accept=".zip,application/zip" hidden></label>
+<p class="small" id="staffQuickStatus"></p>
 </section><div class="layout" style="margin-top:14px">
 <aside class="panel stack work-left"><section class="researcher-profile"><div class="sub">☀️ 感性研究員</div><h2 class="title" style="margin:0">こころ</h2><div class="researcher-visual"><div id="kokoroFallback" class="researcher-fallback">🐣</div><img id="kokoroPortrait" class="researcher-portrait hidden" alt="こころの立ち絵"></div><button class="wardrobe-link" type="button" data-open-wardrobe>👗 こころの衣装を見る</button></section><div id="leftMessage" class="message">こころ「所長、何を観測しますか？」</div><h2 class="title">📁 作品管理室</h2>
 <form id="newForm" class="row"><input id="newTitle" placeholder="作品名（例：新プロジェクト第1号）" maxlength="300" required aria-label="新しい作品名"><button class="primary" type="submit">＋ 作品を登録</button></form>
@@ -242,22 +251,38 @@ $('researcherFilesInput').onchange=async e=>{
  try{const count=await R.saveBatch(files);$('researcherSheetStatus').textContent=count+'枚の衣装を保存しました。A・B・Cを切り替えられます。';await updateResearcherPortraits()}
  catch(err){$('researcherSheetStatus').textContent='登録に失敗しました: '+err.message}
 };
-$('researcherZipInput').onchange=async e=>{
- const file=e.target.files[0];e.target.value='';if(!file)return;
+async function importResearchersZip(file){
+ if(!file)return;
+ const report=(msg)=>{$('staffQuickStatus').textContent=msg;$('researcherSheetStatus').textContent=msg};
+ report('6枚の衣装を読み込み中……');
  try{
-  if(!window.JSZip)throw Error('ZIP解凍用ライブラリが読み込めません。ネット接続を確認するか、PNGを6枚選択してください。');
-  const zip=await JSZip.loadAsync(file);
-  const images=[];
+  if(!window.JSZip)throw Error('ZIP解凍機能が読み込まれていません。ネット接続をご確認ください。');
+  const zip=await JSZip.loadAsync(file),images=[];
   const entries=Object.values(zip.files).filter(entry=>!entry.dir&&R.parseName(entry.name.split('/').pop()));
-  if(!entries.length)throw Error('6枚の研究員画像がZIP内に見つかりませんでした');
-  for(const e of entries){
-   const name=e.name.split('/').pop();const blob=await e.async('blob');images.push(new File([blob],name,{type:'image/png'}));
+  if(!entries.length)throw Error('このZIPには研究員用のPNGが見つかりませんでした。');
+  for(const item of entries){
+   const name=item.name.split('/').pop(),blob=await item.async('blob');
+   images.push(new File([blob],name,{type:'image/png'}));
   }
   const count=await R.saveBatch(images);
-  $('researcherSheetStatus').textContent=count+'枚の衣装を登録しました。A・B・Cを押してみてください！';
+  report(count+'枚を登録しました！ 研究員の配属を確認しています。');
   await updateResearcherPortraits();
- }catch(err){$('researcherSheetStatus').textContent='ZIP登録失敗: '+err.message}
-};
+  const ready=!!(await R.get('kokoro',R.choices().kokoro))&&!!(await R.get('ritsu',R.choices().ritsu));
+  $('staffSetupBanner').classList.toggle('hidden',ready);
+  if(ready)report('こころ・律の画像登録が完了しました。');
+ }catch(err){report('登録エラー：'+err.message)}
+}
+for(const id of ['researcherZipInput','staffQuickZipInput']){
+ $(id).onchange=e=>{const file=e.target.files?.[0];e.target.value='';importResearchersZip(file)};
+}
+async function checkStaffSetup(){
+ try{
+  if(!R)throw Error('画像管理機能を読み込めません');
+  const c=R.choices(),found=await Promise.all([R.get('kokoro',c.kokoro),R.get('ritsu',c.ritsu)]);
+  $('staffSetupBanner').classList.toggle('hidden',!!(found[0]&&found[1]));
+ }catch(e){$('staffSetupBanner').classList.remove('hidden');$('staffQuickStatus').textContent=e.message}
+}
+checkStaffSetup();
 function toggleWardrobe(open){document.body.classList.toggle('wardrobe-open',!!open);$('wardrobeScreen').classList.toggle('visible',!!open);window.scrollTo(0,0)}
 $('openWardrobe').onclick=()=>toggleWardrobe(true);
 $('closeWardrobe').onclick=()=>toggleWardrobe(false);
