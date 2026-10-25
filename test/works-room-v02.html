@@ -208,7 +208,7 @@ const WARDROBE_KEY='elab_builtin_outfits_v1';
 const STAFF_ASSETS={kokoro:['kokoro-a.webp','kokoro-b.webp','kokoro-c.webp'],ritsu:['ritsu-a.webp','ritsu-b.webp','ritsu-c.webp']};
 function selectedStaff(){try{const d=JSON.parse(localStorage.getItem(WARDROBE_KEY)||'{}');return {kokoro:[0,1,2].includes(d.kokoro)?d.kokoro:0,ritsu:[0,1,2].includes(d.ritsu)?d.ritsu:0}}catch{return {kokoro:0,ritsu:0}}}
 function saveStaff(role,n){const data=selectedStaff();data[role]=n;localStorage.setItem(WARDROBE_KEY,JSON.stringify(data));updateResearcherPortraits()}
-function staffSrc(role,n){return './assets/researchers/'+STAFF_ASSETS[role][n]}
+function staffSrc(role,n){return './'+STAFF_ASSETS[role][n]}
 function updateResearcherPortraits(){
  const selected=selectedStaff();
  for(const role of ['kokoro','ritsu']){
