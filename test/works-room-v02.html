@@ -9,16 +9,68 @@ input{padding:11px;border:1px solid #536385;background:#111a32;color:#fff;border
 .wrap{max-width:1140px;padding:22px;margin:auto}.head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:15px}.logo{font-size:29px;font-weight:850}.small{font-size:12px;color:#afbfdf;line-height:1.6}
 .layout{display:grid;grid-template-columns:minmax(225px,.9fr) minmax(0,2.2fr) minmax(185px,.75fr);gap:14px}.panel{background:#1c2541;border:1px solid #415073;border-radius:19px;padding:17px}.title{font-size:18px;font-weight:750;margin:0 0 12px}.stack{display:grid;gap:12px}.list{display:grid;gap:8px;max-height:480px;overflow:auto}.work{display:block;text-align:left;width:100%;background:#283452;border:1px solid transparent}.work.selected{border-color:#c3d2ff;background:#36456b}.work b{display:block;overflow-wrap:anywhere}.work span{font-size:12px;color:#c1cbe3}.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.between{justify-content:space-between}.badge{background:#36476b;border-radius:25px;padding:5px 11px;font-size:12px}.hidden{display:none!important}.phases,.scores{display:grid;gap:5px}.phases{grid-template-columns:repeat(4,1fr)}.scores{grid-template-columns:repeat(10,1fr)}.phases button,.scores button{padding:10px 2px}.active{background:#c4c8fb!important;color:#141c32!important;font-weight:800}.scores .active{background:#f2be82!important}.sub{color:#b7c5e4;font-size:13px}.line{height:1px;background:#3a496c;margin:4px 0}.message{background:#273555;border-radius:10px;padding:12px;font-size:14px;line-height:1.6}.event{border-bottom:1px solid #394765;padding:7px 0;font-size:12px}.event time{color:#a6b8d7}.timer{font-variant-numeric:tabular-nums;font-size:26px;font-weight:850}.notice{background:#382f46;padding:11px;border-radius:9px;font-size:13px}.filebutton{display:inline-block;cursor:pointer;padding:11px;border-radius:10px;background:#3b4a72}.researcher-portrait{width:100%;height:100%;object-fit:cover;object-position:center top;border-radius:11px;display:block;filter:drop-shadow(0 8px 12px #090e25aa)}.researcher-visual{position:relative;overflow:hidden;border-radius:12px;height:420px;background:radial-gradient(circle at 50% 25%,#44527a 0%,#1c2949 65%);border:1px solid #425782}.researcher-visual::after{content:"";pointer-events:none;position:absolute;inset:0;background:linear-gradient(180deg,transparent 65%,#1c2541 100%)}.researcher-profile{position:relative}.researcher-profile h2{letter-spacing:.04em}.researcher-fallback{height:100%;display:grid;place-items:center;background:#273555;border-radius:12px;font-size:68px}.variant-buttons{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;background:#232e4c;border:1px solid #465985;padding:9px;border-radius:12px}.variant-buttons button{width:46px;height:55px;display:flex;align-items:center;justify-content:center;flex-direction:column;border-radius:11px;padding:2px;font-size:12px;background:#334367}.variant-buttons button.active{outline:2px solid #ecb7e5;box-shadow:0 0 12px #b58ad077}.variant-buttons button img{width:35px;height:36px;object-fit:contain}.staff-add{border:1px dashed #8495c4!important;background:transparent!important;font-size:23px!important}.researcher-profile{text-align:center;display:grid;gap:8px}.researcher-right{align-self:start}.work-left{align-self:start}.researcher-profile .sub{font-size:13px}.staff-tools{display:grid;gap:7px}.staff-tools details{font-size:12px}.staff-tools .filebutton{display:block;text-align:center}.staff-note{font-size:12px;color:#afbfdf}details summary{cursor:pointer;padding:8px 0;font-weight:700}
 @media(max-width:920px){.layout{grid-template-columns:1fr 1fr}.observatory{grid-column:1/-1;grid-row:1}.researcher-right{grid-column:2;grid-row:2}.work-left{grid-column:1;grid-row:2}}@media(max-width:760px){.layout{grid-template-columns:1fr}.observatory,.researcher-right,.work-left{grid-column:1;grid-row:auto}.wrap{padding:11px}.panel{padding:12px}.head{align-items:flex-start}.timer{font-size:21px}}
+<style>
+/* E-lab 観測室 — character-first layout */
+:root{--rim:#4e6197;--shine:#9baef6}
+.wrap{max-width:1540px;padding:20px 18px}
+body{background:radial-gradient(ellipse 70% 55% at 50% 0%,#26365f 0%,#151d37 55%,#0e1429 100%)}
+.head{padding:0 16px}
+.layout{grid-template-columns:minmax(225px,1fr) minmax(0,2.12fr) minmax(225px,1fr);gap:16px;align-items:start}
+.panel{background:#1b2441e8;border:1px solid #475989;box-shadow:0 18px 45px #080d202e}
+.work-left,.researcher-right{padding:12px;position:relative;overflow:hidden}
+.work-left{border-color:#775e9a}.researcher-right{border-color:#536b9e}
+.researcher-profile{display:flex;flex-direction:column;gap:0}
+.researcher-profile .sub{font-size:12px;font-weight:800;letter-spacing:.045em;padding-top:8px}
+.researcher-profile h2{margin:2px 0 4px!important}
+.researcher-visual{height:480px;border:0;border-radius:8px;background:radial-gradient(ellipse at 52% 20%,#485380 0%,#263456 50%,#1b2441 85%);overflow:hidden}
+.researcher-portrait{object-fit:contain;object-position:center bottom;position:absolute;inset:0;height:100%;width:100%;filter:drop-shadow(0 14px 18px #090d2050)}
+.researcher-visual::after{background:linear-gradient(180deg,transparent 75%,#1b2441 100%);z-index:1}
+.researcher-fallback{background:transparent; font-size:68px}
+#leftMessage,#rightMessage{min-height:86px;border:1px solid #586aa0;background:linear-gradient(135deg,#33436a,#283658);border-radius:14px;font-size:13px;line-height:1.7;padding:13px;position:relative}
+#leftMessage:before,#rightMessage:before{content:"";position:absolute;top:-9px;left:42px;border-width:0 9px 9px;border-style:solid;border-color:transparent transparent #586aa0}
+#rightMessage:before{left:auto;right:42px}
+.observatory{padding:22px;min-width:0}
+.observatory button.primary{background:linear-gradient(105deg,#98aef5,#8293dc)}
+.observatory .message{background:#273453}
+.wardrobe-link{font-size:12px;display:block;width:100%;border:1px solid #6378b2;background:#29385e;margin:8px 0}
+.nav-actions{display:flex;gap:8px;align-items:center}
+.nav-actions button{background:#3d4e7d;border:1px solid #677cb5}
+.wardrobe-screen{display:none;max-width:1180px;margin:18px auto;padding:20px;border:1px solid #526da2;border-radius:20px;background:#1d2846}
+.wardrobe-screen.visible{display:block}
+.wardrobe-screen .staff-intro{color:#bccbeb;font-size:13px;line-height:1.8}
+.wardrobe-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.wardrobe-member{background:#253454;border:1px solid #526aa0;border-radius:16px;padding:16px;text-align:center}
+.wardrobe-member .variant-buttons{margin:15px auto;justify-content:center}
+.wardrobe-member .variant-buttons button{width:66px;height:85px}
+.wardrobe-member .variant-buttons button img{width:54px;height:58px}
+.wardrobe-preview{width:100%;height:360px;object-fit:contain;display:none}
+.wardrobe-placeholder{height:360px;display:grid;place-items:center;font-size:80px}
+.wardrobe-screen .staff-tools{max-width:610px;margin:20px auto;text-align:center}
+.wardrobe-screen .staff-tools details{padding:12px;border:1px solid #556b9b;border-radius:12px}
+body.wardrobe-open .layout,body.wardrobe-open .notice{display:none}
+body.wardrobe-open .wardrobe-screen{display:block}
+#workList{max-height:170px}
+@media(max-width:1040px){.layout{grid-template-columns:minmax(180px,1fr) minmax(0,2fr) minmax(180px,1fr)}.researcher-visual{height:370px}}
+@media(max-width:920px){.layout{grid-template-columns:1fr 1fr}.researcher-visual{height:310px}}
+@media(max-width:760px){.layout{grid-template-columns:1fr}.wardrobe-columns{grid-template-columns:1fr}.researcher-visual{height:320px}.wrap{padding:10px}}
 </style></head>
 <body><div class="wrap">
-<header class="head"><div><div class="logo">E-lab 🔬</div><div class="small">楽しいを、研究する。／作品管理室 v0.2・テスト専用</div></div><span class="badge">工事中</span></header>
+<header class="head"><div><div class="logo">E-lab 🔬</div><div class="small">楽しいを、研究する。／観測室・テスト運用中</div></div><div class="nav-actions"><button id="openWardrobe" type="button">👗 研究員控室</button><span class="badge">試験運用</span></div></header>
 <div class="notice">これは独立した開発画面です。現行v0.1の記録には触れません。保存先はこのブラウザ内です。まだiPadとiPhoneの同期はできません。</div>
-<div class="layout" style="margin-top:14px">
-<aside class="panel stack work-left"><section class="researcher-profile"><div class="sub">☀️ 感性研究員</div><h2 class="title" style="margin:0">こころ</h2><div class="researcher-visual"><div id="kokoroFallback" class="researcher-fallback">🐣</div><img id="kokoroPortrait" class="researcher-portrait hidden" alt="こころの立ち絵"></div><div id="kokoroVariants" class="variant-buttons" aria-label="こころの衣装"></div></section><div id="leftMessage" class="message">こころ「所長、何を観測しますか？」</div><h2 class="title">📁 作品管理室</h2>
+<section id="wardrobeScreen" class="wardrobe-screen" aria-label="研究員控室">
+<div class="row between"><div><h2>👗 研究員控室</h2><p class="staff-intro">こころと律の衣装を管理します。観測室の記録は変更されません。</p></div><button id="closeWardrobe" class="primary">← 観測室に戻る</button></div>
+<div class="wardrobe-columns">
+<section class="wardrobe-member"><h3>☀️ こころ</h3><div class="small">感性研究員</div><img class="wardrobe-preview" id="kokoroWardrobePortrait" alt="こころの衣装プレビュー"><div class="wardrobe-placeholder" id="kokoroWardrobeFallback">🐣</div><div id="kokoroVariants" class="variant-buttons"></div></section>
+<section class="wardrobe-member"><h3>📊 律</h3><div class="small">分析研究員</div><img class="wardrobe-preview" id="ritsuWardrobePortrait" alt="律の衣装プレビュー"><div class="wardrobe-placeholder" id="ritsuWardrobeFallback">👓</div><div id="ritsuVariants" class="variant-buttons"></div></section>
+</div>
+<div class="staff-tools"><details><summary>衣装画像の登録・追加</summary><label class="filebutton" style="background:#7489cf;color:#0e1730;font-weight:750">衣装6枚セット（ZIP）を登録<input id="researcherZipInput" type="file" accept=".zip,application/zip" hidden></label><div class="staff-note" style="padding:7px 0">または</div><label class="filebutton">PNGを6枚まとめて登録<input id="researcherFilesInput" type="file" accept="image/png,image/webp,image/jpeg" multiple hidden></label><p id="researcherSheetStatus" class="staff-note">前のメッセージのZIPを保存し、ここで選ぶだけで6人分を登録できます。一度登録すれば衣装を切り替えられます。</p><p class="staff-note">衣装画像はこのiPadのブラウザ内に保存されます。作品の観測記録とは別です。</p></details></div>
+<p class="staff-note" style="text-align:center">現在は端末内保存。衣装PNGも作品観測のJSONバックアップには含まれません。</p>
+</section><div class="layout" style="margin-top:14px">
+<aside class="panel stack work-left"><section class="researcher-profile"><div class="sub">☀️ 感性研究員</div><h2 class="title" style="margin:0">こころ</h2><div class="researcher-visual"><div id="kokoroFallback" class="researcher-fallback">🐣</div><img id="kokoroPortrait" class="researcher-portrait hidden" alt="こころの立ち絵"></div><button class="wardrobe-link" type="button" data-open-wardrobe>👗 こころの衣装を見る</button></section><div id="leftMessage" class="message">こころ「所長、何を観測しますか？」</div><h2 class="title">📁 作品管理室</h2>
 <form id="newForm" class="row"><input id="newTitle" placeholder="作品名（例：新プロジェクト第1号）" maxlength="300" required aria-label="新しい作品名"><button class="primary" type="submit">＋ 作品を登録</button></form>
 <div class="small" id="workCount">登録作品 0 件</div><div class="list" id="workList"><div class="sub">まだ作品がありません。</div></div>
 <details><summary>全作品のバックアップ</summary><div class="row"><button id="allExport">全作品JSONを保存</button><label class="filebutton">全作品JSONを復元<input type="file" accept=".json,application/json" hidden id="allImport"></label></div><p class="small">全作品の復元は現在の全作品を置き換えます。必ず先にバックアップを保存してください。</p></details>
-<div class="staff-tools"><details><summary>衣装画像の登録・追加</summary><label class="filebutton" style="background:#7489cf;color:#0e1730;font-weight:750">衣装6枚セット（ZIP）を登録<input id="researcherZipInput" type="file" accept=".zip,application/zip" hidden></label><div class="staff-note" style="padding:7px 0">または</div><label class="filebutton">PNGを6枚まとめて登録<input id="researcherFilesInput" type="file" accept="image/png,image/webp,image/jpeg" multiple hidden></label><p id="researcherSheetStatus" class="staff-note">前のメッセージのZIPを保存し、ここで選ぶだけで6人分を登録できます。一度登録すれば衣装を切り替えられます。</p><p class="staff-note">衣装画像はこのiPadのブラウザ内に保存されます。作品の観測記録とは別です。</p></details></div></aside>
+</aside>
 <main class="panel stack observatory"><div class="row between"><h2 class="title" style="margin:0">🔬 観測室</h2><span class="badge" id="workStatus">未選択</span></div>
 <div id="emptyState" class="message">左の作品管理室から研究対象を選んでください。新規作品を登録してもOKです。</div>
 <div id="workspace" class="stack hidden">
@@ -48,7 +100,7 @@ input{padding:11px;border:1px solid #536385;background:#111a32;color:#fff;border
 <div id="events"></div><button id="moreEvents" class="ghost hidden">さらに10件表示</button>
 <p class="small">ここで表示を省略しても、観測履歴の保存件数は減りません。</p>
 <details><summary>この作品のバックアップ・削除</summary><div class="row"><button id="oneExport">作品JSONを保存</button><label class="filebutton">作品JSONを復元<input type="file" accept=".json,application/json" hidden id="oneImport"></label><button class="danger" id="deleteBtn">作品を削除</button></div><p class="small">削除は観測データごと消去します。削除前に作品JSONを保存することをおすすめします。</p></details>
-</div></main><aside class="panel stack researcher-right"><section class="researcher-profile"><div class="sub">📊 分析研究員</div><h2 class="title" style="margin:0">律</h2><div class="researcher-visual"><div id="ritsuFallback" class="researcher-fallback">👓</div><img id="ritsuPortrait" class="researcher-portrait hidden" alt="律の立ち絵"></div><div id="ritsuVariants" class="variant-buttons" aria-label="律の衣装"></div></section><div id="rightMessage" class="message">律「観測値を保存します」</div><p class="staff-note">こころと律は同期の研究員です。</p></aside></div><p class="small">© E-lab / 試験設備。観測は厳密に、報告はふわっと。</p></div>
+</div></main><aside class="panel stack researcher-right"><section class="researcher-profile"><div class="sub">📊 分析研究員</div><h2 class="title" style="margin:0">律</h2><div class="researcher-visual"><div id="ritsuFallback" class="researcher-fallback">👓</div><img id="ritsuPortrait" class="researcher-portrait hidden" alt="律の立ち絵"></div><button class="wardrobe-link" type="button" data-open-wardrobe>👗 律の衣装を見る</button></section><div id="rightMessage" class="message">律「観測値を保存します」</div><p class="staff-note">こころと律は同期の研究員です。</p></aside></div><p class="small">© E-lab / 試験設備。観測は厳密に、報告はふわっと。</p></div>
 <script src="./works-store-v02.js"></script>
 <script src="./images-v03.js"></script>
 <script src="./color-band-v01.js"></script><script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="./researchers-v01.js"></script>
@@ -178,9 +230,9 @@ async function updateResearcherPortraits(){
    if(staffObjectURLs[role]){URL.revokeObjectURL(staffObjectURLs[role]);staffObjectURLs[role]=null}
    if(sprite){
     const url=URL.createObjectURL(sprite);staffObjectURLs[role]=url;
-    $(role+'Portrait').src=url;$(role+'Portrait').classList.remove('hidden');$(role+'Fallback').classList.add('hidden');
+    $(role+'Portrait').src=url;$(role+'Portrait').classList.remove('hidden');$(role+'Fallback').classList.add('hidden');const wp=$(role+'WardrobePortrait');wp.src=url;wp.style.display='block';$(role+'WardrobeFallback').style.display='none';
    }else{
-    $(role+'Portrait').removeAttribute('src');$(role+'Portrait').classList.add('hidden');$(role+'Fallback').classList.remove('hidden');
+    $(role+'Portrait').removeAttribute('src');$(role+'Portrait').classList.add('hidden');$(role+'Fallback').classList.remove('hidden');$(role+'WardrobePortrait').removeAttribute('src');$(role+'WardrobePortrait').style.display='none';$(role+'WardrobeFallback').style.display='grid';
    }
   }
  }catch(e){$('researcherSheetStatus').textContent='研究員画像の表示に失敗しました: '+e.message}
@@ -206,6 +258,10 @@ $('researcherZipInput').onchange=async e=>{
   await updateResearcherPortraits();
  }catch(err){$('researcherSheetStatus').textContent='ZIP登録失敗: '+err.message}
 };
+function toggleWardrobe(open){document.body.classList.toggle('wardrobe-open',!!open);$('wardrobeScreen').classList.toggle('visible',!!open);window.scrollTo(0,0)}
+$('openWardrobe').onclick=()=>toggleWardrobe(true);
+$('closeWardrobe').onclick=()=>toggleWardrobe(false);
+document.querySelectorAll('[data-open-wardrobe]').forEach(b=>b.onclick=()=>toggleWardrobe(true));
 updateResearcherPortraits();
 function render(){const works=S.list(),w=current();$('workCount').textContent='登録作品 '+works.length+' 件';$('workList').innerHTML=works.length?'':'<div class="sub">まだ作品がありません。</div>';
 for(const p of works){const b=document.createElement('button');b.className='work'+(p.id===chosen?' selected':'');b.innerHTML='<b>'+esc(p.title)+'</b><span>'+esc(p.status)+' ・ 気分 '+evs(p).filter(e=>e.type==='score').length+'件 ・ '+stamp(p.createdAt)+'</span>';b.onclick=()=>operate(()=>select(p.id));$('workList').appendChild(b)}
