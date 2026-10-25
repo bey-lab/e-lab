@@ -18,7 +18,7 @@ input{padding:11px;border:1px solid #536385;background:#111a32;color:#fff;border
 <form id="newForm" class="row"><input id="newTitle" placeholder="作品名（例：新プロジェクト第1号）" maxlength="300" required aria-label="新しい作品名"><button class="primary" type="submit">＋ 作品を登録</button></form>
 <div class="small" id="workCount">登録作品 0 件</div><div class="list" id="workList"><div class="sub">まだ作品がありません。</div></div>
 <details><summary>全作品のバックアップ</summary><div class="row"><button id="allExport">全作品JSONを保存</button><label class="filebutton">全作品JSONを復元<input type="file" accept=".json,application/json" hidden id="allImport"></label></div><p class="small">全作品の復元は現在の全作品を置き換えます。必ず先にバックアップを保存してください。</p></details>
-<div class="staff-tools"><details><summary>衣装画像の登録・追加</summary><label class="filebutton">6枚をまとめて登録<input id="researcherFilesInput" type="file" accept="image/png,image/webp,image/jpeg" multiple hidden></label><p id="researcherSheetStatus" class="staff-note">kokoro-a.png 〜 ritsu-c.png の6枚を選ぶと自動的に配属します。以後の衣装も追加可能です。</p><p class="staff-note">衣装画像はこのiPadのブラウザ内に保存されます。作品の観測記録とは別です。</p></details></div></aside>
+<div class="staff-tools"><details><summary>衣装画像の登録・追加</summary><label class="filebutton" style="background:#7489cf;color:#0e1730;font-weight:750">衣装6枚セット（ZIP）を登録<input id="researcherZipInput" type="file" accept=".zip,application/zip" hidden></label><div class="staff-note" style="padding:7px 0">または</div><label class="filebutton">PNGを6枚まとめて登録<input id="researcherFilesInput" type="file" accept="image/png,image/webp,image/jpeg" multiple hidden></label><p id="researcherSheetStatus" class="staff-note">前のメッセージのZIPを保存し、ここで選ぶだけで6人分を登録できます。一度登録すれば衣装を切り替えられます。</p><p class="staff-note">衣装画像はこのiPadのブラウザ内に保存されます。作品の観測記録とは別です。</p></details></div></aside>
 <main class="panel stack observatory"><div class="row between"><h2 class="title" style="margin:0">🔬 観測室</h2><span class="badge" id="workStatus">未選択</span></div>
 <div id="emptyState" class="message">左の作品管理室から研究対象を選んでください。新規作品を登録してもOKです。</div>
 <div id="workspace" class="stack hidden">
@@ -51,7 +51,7 @@ input{padding:11px;border:1px solid #536385;background:#111a32;color:#fff;border
 </div></main><aside class="panel stack researcher-right"><section class="researcher-profile"><div class="sub">📊 分析研究員</div><h2 class="title" style="margin:0">律</h2><div class="researcher-visual"><div id="ritsuFallback" class="researcher-fallback">👓</div><img id="ritsuPortrait" class="researcher-portrait hidden" alt="律の立ち絵"></div><div id="ritsuVariants" class="variant-buttons" aria-label="律の衣装"></div></section><div id="rightMessage" class="message">律「観測値を保存します」</div><p class="staff-note">こころと律は同期の研究員です。</p></aside></div><p class="small">© E-lab / 試験設備。観測は厳密に、報告はふわっと。</p></div>
 <script src="./works-store-v02.js"></script>
 <script src="./images-v03.js"></script>
-<script src="./color-band-v01.js"></script><script src="./researchers-v01.js"></script>
+<script src="./color-band-v01.js"></script><script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="./researchers-v01.js"></script>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id), S=window.ElabWorksStore, I=window.ElabImageStore;
@@ -189,6 +189,22 @@ $('researcherFilesInput').onchange=async e=>{
  const files=Array.from(e.target.files||[]);e.target.value='';if(!files.length)return;
  try{const count=await R.saveBatch(files);$('researcherSheetStatus').textContent=count+'枚の衣装を保存しました。A・B・Cを切り替えられます。';await updateResearcherPortraits()}
  catch(err){$('researcherSheetStatus').textContent='登録に失敗しました: '+err.message}
+};
+$('researcherZipInput').onchange=async e=>{
+ const file=e.target.files[0];e.target.value='';if(!file)return;
+ try{
+  if(!window.JSZip)throw Error('ZIP解凍用ライブラリが読み込めません。ネット接続を確認するか、PNGを6枚選択してください。');
+  const zip=await JSZip.loadAsync(file);
+  const images=[];
+  const entries=Object.values(zip.files).filter(entry=>!entry.dir&&R.parseName(entry.name.split('/').pop()));
+  if(!entries.length)throw Error('6枚の研究員画像がZIP内に見つかりませんでした');
+  for(const e of entries){
+   const name=e.name.split('/').pop();const blob=await e.async('blob');images.push(new File([blob],name,{type:'image/png'}));
+  }
+  const count=await R.saveBatch(images);
+  $('researcherSheetStatus').textContent=count+'枚の衣装を登録しました。A・B・Cを押してみてください！';
+  await updateResearcherPortraits();
+ }catch(err){$('researcherSheetStatus').textContent='ZIP登録失敗: '+err.message}
 };
 updateResearcherPortraits();
 function render(){const works=S.list(),w=current();$('workCount').textContent='登録作品 '+works.length+' 件';$('workList').innerHTML=works.length?'':'<div class="sub">まだ作品がありません。</div>';
