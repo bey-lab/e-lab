@@ -63,17 +63,12 @@ body.wardrobe-open .wardrobe-screen{display:block}
 <header class="head"><div><div class="logo">E-lab 🔬</div><div class="small">楽しいを、研究する。／観測室・テスト運用中</div></div><div class="nav-actions"><button id="openWardrobe" type="button">👗 研究員控室</button><span class="badge">試験運用</span></div></header>
 <div class="notice">これは独立した開発画面です。現行v0.1の記録には触れません。保存先はこのブラウザ内です。まだiPadとiPhoneの同期はできません。</div>
 <section id="wardrobeScreen" class="wardrobe-screen" aria-label="研究員控室">
-<div class="row between"><div><h2>👗 研究員控室</h2><p class="staff-intro">こころと律の衣装を管理します。観測室の記録は変更されません。</p></div><button id="closeWardrobe" class="primary">← 観測室に戻る</button></div>
+<div class="row between"><div><h2>👗 研究員控室</h2><p class="staff-intro">こころと律の研究員の衣装を選べます。衣装は最初からアプリに含まれています。観測記録には触れません。</p></div><button id="closeWardrobe" class="primary">← 観測室に戻る</button></div>
 <div class="wardrobe-columns">
 <section class="wardrobe-member"><h3>☀️ こころ</h3><div class="small">感性研究員</div><img class="wardrobe-preview" id="kokoroWardrobePortrait" alt="こころの衣装プレビュー"><div class="wardrobe-placeholder" id="kokoroWardrobeFallback">🐣</div><div id="kokoroVariants" class="variant-buttons"></div></section>
 <section class="wardrobe-member"><h3>📊 律</h3><div class="small">分析研究員</div><img class="wardrobe-preview" id="ritsuWardrobePortrait" alt="律の衣装プレビュー"><div class="wardrobe-placeholder" id="ritsuWardrobeFallback">👓</div><div id="ritsuVariants" class="variant-buttons"></div></section>
 </div>
-<div class="staff-tools"><details><summary>衣装画像の登録・追加</summary><label class="filebutton" style="background:#7489cf;color:#0e1730;font-weight:750">衣装6枚セット（ZIP）を登録<input id="researcherZipInput" type="file" accept=".zip,application/zip" hidden></label><div class="staff-note" style="padding:7px 0">または</div><label class="filebutton">PNGを6枚まとめて登録<input id="researcherFilesInput" type="file" accept="image/png,image/webp,image/jpeg" multiple hidden></label><p id="researcherSheetStatus" class="staff-note">前のメッセージのZIPを保存し、ここで選ぶだけで6人分を登録できます。一度登録すれば衣装を切り替えられます。</p><p class="staff-note">衣装画像はこのiPadのブラウザ内に保存されます。作品の観測記録とは別です。</p></details></div>
-<p class="staff-note" style="text-align:center">現在は端末内保存。衣装PNGも作品観測のJSONバックアップには含まれません。</p>
-</section><section id="staffSetupBanner" class="staff-setup-banner hidden" aria-live="polite">
-<div><b>🔬 研究員の立ち絵がまだ登録されていません</b><p class="small">最初の一度だけ、6枚セットのZIPを読み込めば二人が出勤します。作品の観測データは変更しません。</p></div>
-<label class="filebutton staff-import-button">📦 6枚セットZIPを選ぶ<input id="staffQuickZipInput" type="file" accept=".zip,application/zip" hidden></label>
-<p class="small" id="staffQuickStatus"></p>
+<p class="staff-note" style="text-align:center">衣装の選択状態だけを端末に保存します。研究員の画像はアプリ付属素材です。</p>
 </section><div class="layout" style="margin-top:14px">
 <aside class="panel stack work-left"><section class="researcher-profile"><div class="sub">☀️ 感性研究員</div><h2 class="title" style="margin:0">こころ</h2><div class="researcher-visual"><div id="kokoroFallback" class="researcher-fallback">🐣</div><img id="kokoroPortrait" class="researcher-portrait hidden" alt="こころの立ち絵"></div><button class="wardrobe-link" type="button" data-open-wardrobe>👗 こころの衣装を見る</button></section><div id="leftMessage" class="message">こころ「所長、何を観測しますか？」</div><h2 class="title">📁 作品管理室</h2>
 <form id="newForm" class="row"><input id="newTitle" placeholder="作品名（例：新プロジェクト第1号）" maxlength="300" required aria-label="新しい作品名"><button class="primary" type="submit">＋ 作品を登録</button></form>
@@ -112,7 +107,7 @@ body.wardrobe-open .wardrobe-screen{display:block}
 </div></main><aside class="panel stack researcher-right"><section class="researcher-profile"><div class="sub">📊 分析研究員</div><h2 class="title" style="margin:0">律</h2><div class="researcher-visual"><div id="ritsuFallback" class="researcher-fallback">👓</div><img id="ritsuPortrait" class="researcher-portrait hidden" alt="律の立ち絵"></div><button class="wardrobe-link" type="button" data-open-wardrobe>👗 律の衣装を見る</button></section><div id="rightMessage" class="message">律「観測値を保存します」</div><p class="staff-note">こころと律は同期の研究員です。</p></aside></div><p class="small">© E-lab / 試験設備。観測は厳密に、報告はふわっと。</p></div>
 <script src="./works-store-v02.js"></script>
 <script src="./images-v03.js"></script>
-<script src="./color-band-v01.js"></script><script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="./researchers-v01.js"></script>
+<script src="./color-band-v01.js"></script>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id), S=window.ElabWorksStore, I=window.ElabImageStore;
@@ -208,81 +203,32 @@ $('allExport').onclick=()=>operate(()=>download('E-lab-all-works-'+new Date().to
 $('oneImport').onchange=e=>{const file=e.target.files[0];fileRead(file,text=>{const doc=JSON.parse(text),id=doc.work?.id,exists=id&&S.get(id);if(exists&&!confirm('同じ作品IDが存在します。バックアップの内容で上書きしますか？'))return;S.importWork(doc,{replace:!!exists});select(id)});e.target.value=''};
 $('allImport').onchange=e=>{const file=e.target.files[0];fileRead(file,text=>{const doc=JSON.parse(text);if(!confirm('現在の全作品が置き換わります。事前にバックアップを取りましたか？'))return;S.importAll(doc,{replace:true});chosen=null});e.target.value=''};
 $('deleteBtn').onclick=()=>operate(()=>{const w=current();if(!w)return;if(!confirm('作品「'+w.title+'」と全観測履歴を削除しますか？'))return;if(!confirm('この操作は元に戻せません。バックアップを確認しましたか？'))return;alert('画像ファイルは別保存です。画像を削除する場合は、先に画像観測室から削除してください。');S.remove(chosen);chosen=null});
-let staffRenderVersion=0;
-const staffObjectURLs={kokoro:null,ritsu:null};
-async function updateResearcherPortraits(){
- if(!R)return;
- const currentVersion=++staffRenderVersion;
- try{
-  const selected=R.choices();
-  for(const role of ['kokoro','ritsu']){
-   const slot=$ (role+'Variants');slot.replaceChildren();
-   const stored=await R.variants(role);
-   if(currentVersion!==staffRenderVersion)return;
-   const available=Array.from(new Set([0,1,2,...stored]));
-   for(const n of available){
-    const b=document.createElement('button');b.type='button';
-    const name=n<26?String.fromCharCode(65+n):String(n+1);
-    b.title=role+' '+name;b.setAttribute('aria-label',role+'衣装'+name);
-    b.classList.toggle('active',selected[role]===n);
-    const imgData=await R.get(role,n);
-    if(currentVersion!==staffRenderVersion)return;
-    if(imgData){
-      const thumb=document.createElement('img');const url=URL.createObjectURL(imgData);thumb.src=url;thumb.onload=()=>URL.revokeObjectURL(url);b.appendChild(thumb);
-    }
-    const label=document.createElement('span');label.textContent=name;b.appendChild(label);
-    b.onclick=()=>{try{R.choose(role,n);updateResearcherPortraits()}catch(e){alert('衣装設定を保存できませんでした: '+e.message)}};
-    slot.appendChild(b);
-   }
-   const add=document.createElement('button');add.textContent='＋';add.title='衣装を追加';add.className='staff-add';add.onclick=()=>{$('researcherFilesInput').click()};slot.appendChild(add);
-   const sprite=await R.get(role,selected[role]);if(currentVersion!==staffRenderVersion)return;
-   if(staffObjectURLs[role]){URL.revokeObjectURL(staffObjectURLs[role]);staffObjectURLs[role]=null}
-   if(sprite){
-    const url=URL.createObjectURL(sprite);staffObjectURLs[role]=url;
-    $(role+'Portrait').src=url;$(role+'Portrait').classList.remove('hidden');$(role+'Fallback').classList.add('hidden');const wp=$(role+'WardrobePortrait');wp.src=url;wp.style.display='block';$(role+'WardrobeFallback').style.display='none';
-   }else{
-    $(role+'Portrait').removeAttribute('src');$(role+'Portrait').classList.add('hidden');$(role+'Fallback').classList.remove('hidden');$(role+'WardrobePortrait').removeAttribute('src');$(role+'WardrobePortrait').style.display='none';$(role+'WardrobeFallback').style.display='grid';
-   }
+// Built-in researcher portraits. No uploading or ZIP extraction in the app.
+const WARDROBE_KEY='elab_builtin_outfits_v1';
+const STAFF_ASSETS={kokoro:['kokoro-a.webp','kokoro-b.webp','kokoro-c.webp'],ritsu:['ritsu-a.webp','ritsu-b.webp','ritsu-c.webp']};
+function selectedStaff(){try{const d=JSON.parse(localStorage.getItem(WARDROBE_KEY)||'{}');return {kokoro:[0,1,2].includes(d.kokoro)?d.kokoro:0,ritsu:[0,1,2].includes(d.ritsu)?d.ritsu:0}}catch{return {kokoro:0,ritsu:0}}}
+function saveStaff(role,n){const data=selectedStaff();data[role]=n;localStorage.setItem(WARDROBE_KEY,JSON.stringify(data));updateResearcherPortraits()}
+function staffSrc(role,n){return './assets/researchers/'+STAFF_ASSETS[role][n]}
+function updateResearcherPortraits(){
+ const selected=selectedStaff();
+ for(const role of ['kokoro','ritsu']){
+  const main=$(role+'Portrait'),wardrobe=$(role+'WardrobePortrait'),fallback=$(role+'Fallback'),wardrobeFallback=$(role+'WardrobeFallback');
+  const src=staffSrc(role,selected[role]);
+  main.onerror=()=>{main.classList.add('hidden');fallback.classList.remove('hidden')};
+  main.onload=()=>{main.classList.remove('hidden');fallback.classList.add('hidden')};
+  main.src=src;
+  wardrobe.onerror=()=>{wardrobe.style.display='none';wardrobeFallback.style.display='grid'};
+  wardrobe.onload=()=>{wardrobe.style.display='block';wardrobeFallback.style.display='none'};
+  wardrobe.src=src;
+  const area=$(role+'Variants');area.replaceChildren();
+  for(let n=0;n<STAFF_ASSETS[role].length;n++){
+   const btn=document.createElement('button');btn.type='button';btn.classList.toggle('active',n===selected[role]);btn.title=role+' '+String.fromCharCode(65+n);
+   const pic=document.createElement('img');pic.src=staffSrc(role,n);pic.alt='';
+   const name=document.createElement('span');name.textContent=String.fromCharCode(65+n);btn.append(pic,name);
+   btn.onclick=()=>saveStaff(role,n);area.append(btn);
   }
- }catch(e){$('researcherSheetStatus').textContent='研究員画像の表示に失敗しました: '+e.message}
+ }
 }
-$('researcherFilesInput').onchange=async e=>{
- const files=Array.from(e.target.files||[]);e.target.value='';if(!files.length)return;
- try{const count=await R.saveBatch(files);$('researcherSheetStatus').textContent=count+'枚の衣装を保存しました。A・B・Cを切り替えられます。';await updateResearcherPortraits()}
- catch(err){$('researcherSheetStatus').textContent='登録に失敗しました: '+err.message}
-};
-async function importResearchersZip(file){
- if(!file)return;
- const report=(msg)=>{$('staffQuickStatus').textContent=msg;$('researcherSheetStatus').textContent=msg};
- report('6枚の衣装を読み込み中……');
- try{
-  if(!window.JSZip)throw Error('ZIP解凍機能が読み込まれていません。ネット接続をご確認ください。');
-  const zip=await JSZip.loadAsync(file),images=[];
-  const entries=Object.values(zip.files).filter(entry=>!entry.dir&&R.parseName(entry.name.split('/').pop()));
-  if(!entries.length)throw Error('このZIPには研究員用のPNGが見つかりませんでした。');
-  for(const item of entries){
-   const name=item.name.split('/').pop(),blob=await item.async('blob');
-   images.push(new File([blob],name,{type:'image/png'}));
-  }
-  const count=await R.saveBatch(images);
-  report(count+'枚を登録しました！ 研究員の配属を確認しています。');
-  await updateResearcherPortraits();
-  const ready=!!(await R.get('kokoro',R.choices().kokoro))&&!!(await R.get('ritsu',R.choices().ritsu));
-  $('staffSetupBanner').classList.toggle('hidden',ready);
-  if(ready)report('こころ・律の画像登録が完了しました。');
- }catch(err){report('登録エラー：'+err.message)}
-}
-for(const id of ['researcherZipInput','staffQuickZipInput']){
- $(id).onchange=e=>{const file=e.target.files?.[0];e.target.value='';importResearchersZip(file)};
-}
-async function checkStaffSetup(){
- try{
-  if(!R)throw Error('画像管理機能を読み込めません');
-  const c=R.choices(),found=await Promise.all([R.get('kokoro',c.kokoro),R.get('ritsu',c.ritsu)]);
-  $('staffSetupBanner').classList.toggle('hidden',!!(found[0]&&found[1]));
- }catch(e){$('staffSetupBanner').classList.remove('hidden');$('staffQuickStatus').textContent=e.message}
-}
-checkStaffSetup();
 function toggleWardrobe(open){document.body.classList.toggle('wardrobe-open',!!open);$('wardrobeScreen').classList.toggle('visible',!!open);window.scrollTo(0,0)}
 $('openWardrobe').onclick=()=>toggleWardrobe(true);
 $('closeWardrobe').onclick=()=>toggleWardrobe(false);
