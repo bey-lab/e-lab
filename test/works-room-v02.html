@@ -98,6 +98,17 @@ body.wardrobe-open .wardrobe-screen{display:block}
 <div id="colorBar" class="row" style="gap:0;align-items:stretch;overflow:hidden;border-radius:9px;height:28px;background:#394463"></div>
 <div id="colorLegend" class="row" style="gap:10px"></div><div id="colorTalk" class="small"></div>
 <div class="small">画像を縮小して画素の色を大分類した概算値です。色の良し悪しは評価しません。透過部分は集計対象外です。</div></div>
+<section id="instrumentReport" class="message stack" style="gap:12px">
+<div class="row between"><b>🔬 制作変化・密度観測装置</b><span id="instrumentState" class="small">観測待ち</span></div>
+<div id="instrumentText" class="small">同じ作品に画像を2枚以上登録すると、直近2枚の変化を観測します。</div>
+<div id="instrumentContent" class="hidden">
+ <div class="row" style="align-items:flex-start;gap:16px">
+  <div style="flex:1;min-width:145px"><b class="sub">制作変化マップ</b><img id="differenceHeatmap" alt="直近2枚の画像差の強さを表すマップ" style="display:block;width:100%;max-width:280px;image-rendering:auto;border-radius:10px;margin-top:7px"><p class="small">明るい部分ほど2枚の画素差が大きい場所です。</p></div>
+  <div style="flex:1;min-width:160px"><div id="differenceStats" class="small"></div><div class="line" style="margin:12px 0"></div><div id="densityStats" class="small"></div></div>
+ </div>
+</div>
+<div class="small">小さく縮小した画像の色・明暗差から算出した概算です。構図変更・位置ずれ・色調整でも差は出ます。技術、上達、良し悪しを評価するものではありません。</div>
+</section>
 <div id="imageGallery" class="row" style="align-items:stretch"></div>
 </section>
 <div class="line"></div>
@@ -114,6 +125,7 @@ body.wardrobe-open .wardrobe-screen{display:block}
 <script src="./works-store-v02.js"></script>
 <script src="./images-v03.js"></script>
 <script src="./color-band-v01.js"></script>
+<script src="./observation-v01.js"></script>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id), S=window.ElabWorksStore, I=window.ElabImageStore;
@@ -124,7 +136,7 @@ $('switchMode').textContent=isTest?'← 通常モードに戻る':'🧪 テス�
 $('modeNotice').textContent=isTest?'🧪 テストモード：作品・制作時間・気分・画像は通常モードと完全に別保存。気兼ねなく画像を試せます。記録はこのブラウザ内に保存されます。':'通常モード：本番の作品・画像を記録します。練習で画像を試すなら右上の「🧪 テストモードへ」。どちらも旧v0.1とは独立保存です。';
 if(!S){alert('保存モジュールが読み込めませんでした');return}
 const phases=S.PHASES,R=window.ElabResearchers;
-let chosen=null,score=7,phase='ラフ',moodComment=null,visibleEvents=10,imageRequest=0,imageUrls=[],colorRequest=0;
+let chosen=null,score=7,phase='ラフ',moodComment=null,visibleEvents=10,imageRequest=0,imageUrls=[],colorRequest=0,instrumentRequest=0;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const stamp=t=>new Date(t).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
 const fmt=ms=>{let n=Math.max(0,Math.floor(ms/1000));return [Math.floor(n/3600),Math.floor(n/60)%60,n%60].map(x=>String(x).padStart(2,'0')).join(':')};
@@ -162,18 +174,37 @@ async function showColor(image,workId){
   $('colorTalk').textContent='律「'+result.message+'」　こころ「色が見つかりましたねえ……！」';
  }catch(e){if(token!==colorRequest)return;$('colorReportText').textContent='解析できませんでした：'+e.message}
 }
+async function showInstruments(images,workId){
+ const token=++instrumentRequest;
+ const state=$('instrumentState'),copy=$('instrumentText'),content=$('instrumentContent');
+ content.classList.add('hidden');state.textContent='観測待ち';
+ if(images.length<2){copy.textContent='同じ作品に画像を2枚以上登録すると、直近2枚を比較します。';return}
+ if(!window.ElabImageInstruments){copy.textContent='観測装置を読み込めませんでした。再読み込みしてください。';state.textContent='使用不可';return}
+ state.textContent='画像を比較中';copy.textContent='直近2枚の変化を観測しています…';
+ try{
+  const old=images[1],latest=images[0],report=await ElabImageInstruments.analyze(old.blob,latest.blob);
+  if(token!==instrumentRequest||chosen!==workId)return;
+  $('differenceHeatmap').src=report.change.heatmap;
+  $('differenceStats').textContent='変化した画素：約'+report.change.changedPercent+'％ ／ 平均色差 '+report.change.meanDifference+'（0〜255）\n変化が目立つ位置：'+report.change.areas.join('・');
+  $('differenceStats').style.whiteSpace='pre-line';
+  $('densityStats').textContent='明暗の境界量（概算）\n前：'+report.density.previous+' → 後：'+report.density.current+'\n密度が比較的高い区画：64区画中 '+report.density.hotCells+' 区画';
+  $('densityStats').style.whiteSpace='pre-line';
+  copy.textContent=stamp(old.createdAt)+' → '+stamp(latest.createdAt)+' を比較。'+(report.change.aspectWarning?' ※画像の縦横比が異なるため、差は参考値です。':'');
+  content.classList.remove('hidden');state.textContent='観測済み';
+ }catch(e){if(token!==instrumentRequest)return;copy.textContent='画像比較に失敗しました：'+e.message;state.textContent='観測失敗'}
+}
 async function showImages(workId){
- const token=++imageRequest;++colorRequest;clearImageUrls();
+ const token=++imageRequest;++colorRequest;++instrumentRequest;clearImageUrls();
  $('imageError').classList.add('hidden');$('imageCount').textContent='読み込み中';$('imageGallery').replaceChildren();$('latestImage').textContent='画像を確認しています…';
  try{
    if(!I)throw Error('画像管理モジュールが読み込まれていません');
    const images=await I.list(workId);if(token!==imageRequest||chosen!==workId)return;
    $('imageCount').textContent=images.length+'枚';
    $('latestImage').replaceChildren();
-   if(!images.length){$('latestImage').textContent='まだ画像は届いていません。';$('colorReportText').textContent='画像が登録されると色を数えます。';$('colorBar').replaceChildren();$('colorLegend').replaceChildren();$('colorTalk').textContent='';return}
+   if(!images.length){showInstruments([],workId);$('latestImage').textContent='まだ画像は届いていません。';$('colorReportText').textContent='画像が登録されると色を数えます。';$('colorBar').replaceChildren();$('colorLegend').replaceChildren();$('colorTalk').textContent='';return}
    const newest=images[0],head=document.createElement('div'),pic=document.createElement('img');
    pic.src=URL.createObjectURL(newest.blob);imageUrls.push(pic.src);pic.alt='最新観測画像';pic.style.cssText='width:100%;max-height:390px;object-fit:contain;border-radius:10px';
-   head.textContent='最新の観測画像：'+newest.name+' / '+newest.width+'×'+newest.height+'px / '+stamp(newest.createdAt);
+   head.textContent='最新の観測画像：'+newest.name+' / '+newest.width+'×'+newest.height+'px / '+stamp(newest.createdAt);showInstruments(images,workId);
    $('latestImage').append(head,pic);showColor(newest,workId);
    for(const im of images){
      const card=document.createElement('div');card.style.cssText='width:110px;min-width:110px;background:#2d3858;padding:6px;border-radius:9px;display:grid;gap:5px';
@@ -248,7 +279,7 @@ updateResearcherPortraits();
 function render(){const works=S.list(),w=current();$('workCount').textContent='登録作品 '+works.length+' 件';$('workList').innerHTML=works.length?'':'<div class="sub">まだ作品がありません。</div>';
 for(const p of works){const b=document.createElement('button');b.className='work'+(p.id===chosen?' selected':'');b.innerHTML='<b>'+esc(p.title)+'</b><span>'+esc(p.status)+' ・ 気分 '+evs(p).filter(e=>e.type==='score').length+'件 ・ '+stamp(p.createdAt)+'</span>';b.onclick=()=>operate(()=>select(p.id));$('workList').appendChild(b)}
 $('emptyState').classList.toggle('hidden',!!w);$('workspace').classList.toggle('hidden',!w);$('workStatus').textContent=w?w.status:'未選択';
-if(!w){++imageRequest;++colorRequest;clearImageUrls();return;}
+if(!w){++imageRequest;++colorRequest;++instrumentRequest;clearImageUrls();$('instrumentContent').classList.add('hidden');$('instrumentState').textContent='観測待ち';$('instrumentText').textContent='作品を選択すると観測できます。';return;}
 if(document.activeElement!==$('editTitle'))$('editTitle').value=w.title;
 const run=running(w),has=started(w),open=w.status==='制作中';
 $('runningState').textContent=run?'観測中':has?'休憩中':'未開始';
