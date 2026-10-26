@@ -101,5 +101,5 @@ function importAll(json,{replace=false}={}){
  assert(replace,'全作品の置換は明示的な確認が必要です');
  return commit(doc.data);
 }
-global.ElabWorksStore=Object.freeze({KEY,SCHEMA,STATES,PHASES,read,create,get,list,rename,observe,setStatus,remove,exportWork,exportAll,importWork,importAll});
+global.ElabWorksStore=Object.freeze({KEY,SCHEMA,STATES,PHASES,read,create,get,list,rename,observe,setStatus,remove,exportWork,exportAll,importWork,importAll,validateBackup:validateDB});
 })(typeof window!=='undefined'?window:globalThis);
