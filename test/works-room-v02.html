@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#151b32">
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#151b32"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="manifest" href="./manifest.webmanifest">
 <title>E-lab | 作品管理室 工事中</title>
 <style>
 :root{font:16px -apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",sans-serif;color:#edf1ff;background:#111629}*{box-sizing:border-box}
@@ -74,7 +74,8 @@ body.wardrobe-open .wardrobe-screen{display:block}
 <section class="wardrobe-member"><h3>📊 律</h3><div class="small">分析研究員</div><img class="wardrobe-preview" id="ritsuWardrobePortrait" alt="律の衣装プレビュー"><div class="wardrobe-placeholder" id="ritsuWardrobeFallback">👓</div><div id="ritsuVariants" class="variant-buttons"></div></section>
 </div>
 <p class="staff-note" style="text-align:center">衣装の選択状態だけを端末に保存します。研究員の画像はアプリ付属素材です。</p>
-</section><div class="layout" style="margin-top:14px">
+</section><div id="offlineNotice" role="status" class="row" style="margin:10px 0 0;padding:9px 13px;border-radius:10px;background:#243553;border:1px solid #4b6391;font-size:12px;color:#d0defa"><span id="offlineStatus">📡 オフライン用データを準備しています…</span><button id="offlineRetry" class="ghost" type="button" style="font-size:12px;padding:7px 10px">準備を確認</button></div>
+<div class="layout" style="margin-top:14px">
 <aside class="panel stack work-left"><section class="researcher-profile"><div class="sub">☀️ 感性研究員</div><h2 class="title" style="margin:0">こころ</h2><div class="researcher-visual"><div id="kokoroFallback" class="researcher-fallback">🐣</div><img id="kokoroPortrait" class="researcher-portrait hidden" alt="こころの立ち絵"></div><button class="wardrobe-link" type="button" data-open-wardrobe>👗 こころの衣装を見る</button></section><div id="leftMessage" class="message">こころ「所長、何を観測しますか？」</div><h2 class="title">📁 作品管理室</h2>
 <form id="newForm" class="row"><input id="newTitle" placeholder="作品名（例：新プロジェクト第1号）" maxlength="300" required aria-label="新しい作品名"><button class="primary" type="submit">＋ 作品を登録</button></form>
 <div class="small" id="workCount">登録作品 0 件</div><div class="list" id="workList"><div class="sub">まだ作品がありません。</div></div>
@@ -330,5 +331,41 @@ $('moreEvents').classList.toggle('hidden',matching.length<=visibleEvents);
 $('moreEvents').textContent='さらに10件表示（残り'+Math.max(0,matching.length-visibleEvents)+'件）';
 }
 render();setInterval(()=>{const w=current();if(w&&running(w))$('timer').textContent=fmt(elapsed(w))},1000);
+})();
+</script>
+<script>
+(function(){
+ 'use strict';
+ const status=document.getElementById('offlineStatus');
+ const button=document.getElementById('offlineRetry');
+ if(!('serviceWorker' in navigator)){status.textContent='⚠ このブラウザはオフライン起動に対応していません';button.hidden=true;return}
+ let registered=null;
+ function display(detail){
+  if(detail?.ready)status.textContent='✅ オフライン準備完了（'+detail.files+'/'+detail.total+'ファイル）。次回から通信なしで起動できます。'+(detail.zipReady?'バックアップZIPも利用可能。':'※ZIPの書き出し・復元には通信が必要な場合があります。');
+  else if(detail)status.textContent='📡 オフライン用ファイルを準備中（'+detail.files+'/'+detail.total+'）。オンラインで再読み込みしてください。';
+ }
+ navigator.serviceWorker.addEventListener('message',e=>{if(e.data?.type==='ELAB_OFFLINE_STATUS')display(e.data)});
+ async function verify(){
+  try{
+   const reg=registered||await navigator.serviceWorker.getRegistration('./');registered=reg;
+   if(!reg){status.textContent='📡 オフライン機能を登録しています…';return}
+   if(reg.installing){status.textContent='📡 オフラインのデータを保存中です…';return}
+   if(!reg.active){status.textContent='📡 準備中です。オンラインで開き直してください。';return}
+   status.textContent='📡 保存済みのファイルを確認しています…';
+   reg.active.postMessage({type:'ELAB_OFFLINE_STATUS'});
+  }catch(e){status.textContent='⚠ オフライン準備の確認に失敗：'+e.message}
+ }
+ async function setup(){
+  try{
+   status.textContent='📡 オフライン用データを保存しています…';
+   registered=await navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'});
+   if(registered.installing)registered.installing.addEventListener('statechange',()=>{if(registered.installing?.state==='activated'||registered.active)verify()});
+   navigator.serviceWorker.addEventListener('controllerchange',verify);
+   await navigator.serviceWorker.ready;
+   await verify();
+  }catch(e){status.textContent='⚠ オフライン準備に失敗：'+e.message+'。ネット接続を確認して再読み込みしてください。'}
+ }
+ button.onclick=()=>{status.textContent='📡 確認しています…';if(registered)registered.update().then(verify).catch(e=>{status.textContent='⚠ '+e.message});else setup()};
+ setup();
 })();
 </script></body></html>
