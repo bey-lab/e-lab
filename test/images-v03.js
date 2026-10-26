@@ -21,5 +21,21 @@ await query('readwrite',s=>s.put(record));return {...record,blob:undefined}}
 async function list(workId){const db=await connect();return new Promise((resolve,reject)=>{const tx=db.transaction(TABLE,'readonly'),s=tx.objectStore(TABLE).index('workId'),req=s.getAll(IDBKeyRange.only(workId));req.onsuccess=()=>resolve(req.result.sort((a,b)=>b.createdAt-a.createdAt));req.onerror=()=>reject(req.error);tx.oncomplete=()=>db.close()})}
 async function remove(id){return query('readwrite',s=>s.delete(id))}
 async function get(id){return query('readonly',s=>s.get(id))}
-g.ElabImageStore=Object.freeze({add,list,remove,get});
+async function importRecords(records){
+ if(!Array.isArray(records))throw Error('画像復元データが不正です');
+ const db=await connect();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(TABLE,'readwrite'),store=tx.objectStore(TABLE);
+  for(const record of records){
+   if(!record||typeof record.id!=='string'||typeof record.workId!=='string'||!(record.blob instanceof Blob)||!record.blob.type.startsWith('image/')){
+    tx.abort();db.close();reject(Error('画像情報の形式が不正です'));return;
+   }
+   store.put(record);
+  }
+  tx.oncomplete=()=>{db.close();resolve(records.length)};
+  tx.onerror=()=>{db.close();reject(tx.error||Error('画像の復元に失敗しました'))};
+  tx.onabort=()=>{db.close();reject(tx.error||Error('画像保存を中止しました'))};
+ });
+}
+g.ElabImageStore=Object.freeze({add,list,remove,get,importRecords});
 })(window);
