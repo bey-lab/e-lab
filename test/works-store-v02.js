@@ -3,7 +3,8 @@
    UI接続前の独立したモジュール。 */
 (function(global){
 'use strict';
-const KEY='elab_works_v2';
+const TEST_MODE=new URLSearchParams(global.location?.search||'').get('mode')==='test';
+const KEY=TEST_MODE?'elab_works_v2_sandbox':'elab_works_v2';
 const SCHEMA='E-lab-works-v2';
 const STATES=['制作中','完成','凍結','ボツ'];
 const PHASES=['ラフ','線画','着彩','仕上げ'];
