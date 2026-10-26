@@ -1,0 +1,12 @@
+{
+  "name": "E-lab — 楽しいを、研究する。",
+  "short_name": "E-lab",
+  "description": "イラスト制作の楽しさと観測記録を残す研究所",
+  "start_url": "./works-room-v02.html?mode=normal",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#111629",
+  "theme_color": "#151b32",
+  "lang": "ja",
+  "orientation": "any"
+}
