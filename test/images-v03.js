@@ -1,7 +1,8 @@
 /* E-lab image storage v0.3 — IndexedDB separate from works metadata.
 Images stay on this device. JSON backups from v0.2 DO NOT contain image files. */
 (function(g){'use strict';
-const DB='elab_images_v03',TABLE='snapshots';
+const TEST_MODE=new URLSearchParams(g.location?.search||'').get('mode')==='test';
+const DB=TEST_MODE?'elab_images_v03_sandbox':'elab_images_v03',TABLE='snapshots';
 function connect(){return new Promise((resolve,reject)=>{if(!g.indexedDB)return reject(Error('このブラウザでは画像保存が使用できません'));
 const req=indexedDB.open(DB,1);
 req.onupgradeneeded=()=>{let db=req.result;const s=db.createObjectStore(TABLE,{keyPath:'id'});s.createIndex('workId','workId',{unique:false})};
