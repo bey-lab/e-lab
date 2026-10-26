@@ -78,7 +78,7 @@ body.wardrobe-open .wardrobe-screen{display:block}
 <aside class="panel stack work-left"><section class="researcher-profile"><div class="sub">☀️ 感性研究員</div><h2 class="title" style="margin:0">こころ</h2><div class="researcher-visual"><div id="kokoroFallback" class="researcher-fallback">🐣</div><img id="kokoroPortrait" class="researcher-portrait hidden" alt="こころの立ち絵"></div><button class="wardrobe-link" type="button" data-open-wardrobe>👗 こころの衣装を見る</button></section><div id="leftMessage" class="message">こころ「所長、何を観測しますか？」</div><h2 class="title">📁 作品管理室</h2>
 <form id="newForm" class="row"><input id="newTitle" placeholder="作品名（例：新プロジェクト第1号）" maxlength="300" required aria-label="新しい作品名"><button class="primary" type="submit">＋ 作品を登録</button></form>
 <div class="small" id="workCount">登録作品 0 件</div><div class="list" id="workList"><div class="sub">まだ作品がありません。</div></div>
-<details><summary>全作品のバックアップ</summary><div class="row"><button id="allExport">全作品JSONを保存</button><label class="filebutton">全作品JSONを復元<input type="file" accept=".json,application/json" hidden id="allImport"></label></div><p class="small">全作品の復元は現在の全作品を置き換えます。必ず先にバックアップを保存してください。</p></details>
+<details open><summary>🛡️ 研究所のデータ保全</summary><div class="staff-note" style="padding:9px 0">画像も制作記録もまとめて保存します。機種変更前にはZIPをiCloud Driveなどに保管してください。</div><div class="row"><button id="completeExport" class="primary" type="button">📦 完全バックアップZIPを保存</button><label class="filebutton">📥 完全バックアップZIPを復元<input id="completeImport" type="file" accept=".zip,application/zip" hidden></label></div><p id="completeBackupStatus" class="staff-note" role="status">ZIPには画像本体を含みます。復元は既存作品を上書きしません。</p></details><details><summary>従来のJSONバックアップ（画像なし）</summary><div class="row"><button id="allExport">全作品JSONを保存</button><label class="filebutton">全作品JSONを復元<input type="file" accept=".json,application/json" hidden id="allImport"></label></div><p class="small">全作品の復元は現在の全作品を置き換えます。必ず先にバックアップを保存してください。</p></details>
 </aside>
 <main class="panel stack observatory"><div class="row between"><h2 class="title" style="margin:0">🔬 観測室</h2><span class="badge" id="workStatus">未選択</span></div>
 <div id="emptyState" class="message">左の作品管理室から研究対象を選んでください。新規作品を登録してもOKです。</div>
@@ -125,7 +125,7 @@ body.wardrobe-open .wardrobe-screen{display:block}
 <script src="./works-store-v02.js"></script>
 <script src="./images-v03.js"></script>
 <script src="./color-band-v01.js"></script>
-<script src="./observation-v01.js"></script>
+<script src="./observation-v01.js"></script><script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="./complete-backup-v01.js"></script>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id), S=window.ElabWorksStore, I=window.ElabImageStore;
@@ -231,6 +231,34 @@ $('imageInput').onchange=async e=>{
 };
 function download(name,json){const blob=new Blob([json],{type:'application/json'});const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),2500)}
 function fileRead(file,fn){if(!file)return;file.text().then(text=>operate(()=>fn(text))).catch(e=>alert('読み込みに失敗しました: '+e.message))}
+let backupBusy=false;
+const backupStatus=message=>{$('completeBackupStatus').textContent=message};
+$('completeExport').onclick=async()=>{
+ if(backupBusy)return;backupBusy=true;$('completeExport').disabled=true;
+ try{
+  backupStatus('作品と画像を集めています…');
+  const result=await ElabCompleteBackup.exportAll(backupStatus);
+  const url=URL.createObjectURL(result.blob),a=document.createElement('a');
+  a.href=url;a.download=result.name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),120000);
+  backupStatus('バックアップを作成しました：'+result.workCount+'作品・'+result.imageCount+'画像。iPadの「ファイル」に保存されたことをご確認ください。');
+ }catch(e){backupStatus('書き出し失敗：'+e.message)}
+ finally{backupBusy=false;$('completeExport').disabled=false}
+};
+$('completeImport').onchange=async e=>{
+ const file=e.target.files?.[0];e.target.value='';if(!file||backupBusy)return;
+ backupBusy=true;$('completeExport').disabled=true;
+ try{
+  backupStatus('バックアップを検査しています…');
+  const inspected=await ElabCompleteBackup.inspectFile(file,backupStatus);
+  if(!confirm(inspected.works.works.length+'作品・'+inspected.manifest.images.length+'画像を追加で復元します。既存作品は上書きしません。実行しますか？')){backupStatus('復元を取り消しました。');return}
+  const result=await ElabCompleteBackup.importAll(file,backupStatus);
+  backupStatus('復元完了：'+result.works+'作品・'+result.images+'画像。');
+  chosen=null;render();
+ }catch(err){backupStatus('復元を中止しました：'+err.message+'。元の作品は削除していません。')}
+ finally{backupBusy=false;$('completeExport').disabled=false}
+};
+
 $('newForm').onsubmit=e=>{e.preventDefault();operate(()=>{const w=S.create($('newTitle').value);$('newTitle').value='';select(w.id)})};
 $('renameBtn').onclick=()=>operate(()=>S.rename(chosen,$('editTitle').value));
 $('beginBtn').onclick=begin;$('pauseBtn').onclick=pause;$('resumeBtn').onclick=resume;
