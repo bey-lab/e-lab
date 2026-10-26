@@ -39,6 +39,7 @@ async function inspectFile(file,onProgress){
  const [man,works]=await Promise.all([zip.file('manifest.json').async('string').then(JSON.parse),zip.file('works.json').async('string').then(JSON.parse)]);
  assert(man.schema===SCHEMA,'対応していないバックアップ形式です');
  assert(works?.schema===S().SCHEMA&&Array.isArray(works.works),'作品データが不正です');
+ S().validateBackup(works);
  assert(Array.isArray(man.images)&&man.images.length<=MAX_IMAGES,'画像一覧が不正です');
  assert(man.works===works.works.length,'作品件数が一致しません');
  const ids=new Set(),paths=new Set(),workIds=new Set(works.works.map(x=>x.id));
@@ -48,6 +49,7 @@ async function inspectFile(file,onProgress){
   assert(workIds.has(im.workId),'所属する作品がない画像があります');
   assert(validName(im.path)&&!paths.has(im.path)&&!!zip.file(im.path),'画像ファイルが不足しています');
   assert(Number.isFinite(im.bytes)&&im.bytes>=0&&im.bytes<=MAX_IMAGE,'画像サイズが不正です');
+  assert(!(await I().get(im.id)),'同じ画像IDが既に保存されています。データ保護のため復元できません');
   ids.add(im.id);paths.add(im.path);
  }
  // Fully validate work/event schema through the public store's importer shape,
@@ -74,6 +76,7 @@ async function importAll(file,onProgress){
  // Recheck before first write; no replace/overwrite of existing work records.
  const existing=new Set(S().list().map(w=>w.id));
  assert(!works.works.some(w=>existing.has(w.id)),'復元直前に作品の重複が見つかりました');
+ for(const im of images)assert(!(await I().get(im.id)),'復元直前に同じ画像IDが見つかりました');
  if(onProgress)onProgress('画像を端末に保存しています…');
  if(images.length)await I().importRecords(images);
  if(onProgress)onProgress('作品と観測履歴を復元しています…');
