@@ -42,6 +42,9 @@ body{background:radial-gradient(ellipse 70% 55% at 50% 0%,#26365f 0%,#151d37 55%
 .wardrobe-link{font-size:12px;display:block;width:100%;border:1px solid #6378b2;background:#29385e;margin:8px 0}
 .nav-actions{display:flex;gap:8px;align-items:center}
 .nav-actions button{background:#3d4e7d;border:1px solid #677cb5}
+.mode-switch{display:inline-block;color:#e7ebff;text-decoration:none;background:#5269a5;border:1px solid #8c9dd5;padding:10px 12px;border-radius:10px;font-size:13px;font-weight:800;white-space:nowrap}
+body:has(#modeBadge) #modeBadge{border:1px solid #6678a6}
+@media(max-width:760px){.nav-actions{flex-wrap:wrap;justify-content:flex-end}.mode-switch{font-size:12px}}
 .wardrobe-screen{display:none;max-width:1180px;margin:18px auto;padding:20px;border:1px solid #526da2;border-radius:20px;background:#1d2846}
 .wardrobe-screen.visible{display:block}
 .wardrobe-screen .staff-intro{color:#bccbeb;font-size:13px;line-height:1.8}
@@ -62,8 +65,8 @@ body.wardrobe-open .wardrobe-screen{display:block}
 @media(max-width:760px){.layout{grid-template-columns:1fr}.wardrobe-columns{grid-template-columns:1fr}.researcher-visual{height:320px}.wrap{padding:10px}}
 </style></head>
 <body><div class="wrap">
-<header class="head"><div><div class="logo">E-lab 🔬</div><div class="small">楽しいを、研究する。／観測室・テスト運用中</div></div><div class="nav-actions"><button id="openWardrobe" type="button">👗 研究員控室</button><span class="badge">試験運用</span></div></header>
-<div class="notice">これは独立した開発画面です。現行v0.1の記録には触れません。保存先はこのブラウザ内です。まだiPadとiPhoneの同期はできません。</div>
+<header class="head"><div><div class="logo">E-lab 🔬</div><div class="small">楽しいを、研究する。／観測室・テスト運用中</div></div><div class="nav-actions"><button id="openWardrobe" type="button">👗 研究員控室</button><span id="modeBadge" class="badge">通常モード</span><a id="switchMode" class="mode-switch" href="?mode=test">🧪 テストモードへ</a></div></header>
+<div id="modeNotice" class="notice">これは開発版の通常モードです。v0.1の記録とは独立し、このiPad内に保存されます。iPhoneとは同期されません。</div>
 <section id="wardrobeScreen" class="wardrobe-screen" aria-label="研究員控室">
 <div class="row between"><div><h2>👗 研究員控室</h2><p class="staff-intro">こころと律の研究員の衣装を選べます。衣装は最初からアプリに含まれています。観測記録には触れません。</p></div><button id="closeWardrobe" class="primary">← 観測室に戻る</button></div>
 <div class="wardrobe-columns">
@@ -107,12 +110,18 @@ body.wardrobe-open .wardrobe-screen{display:block}
 <p class="small">ここで表示を省略しても、観測履歴の保存件数は減りません。</p>
 <details><summary>この作品のバックアップ・削除</summary><div class="row"><button id="oneExport">作品JSONを保存</button><label class="filebutton">作品JSONを復元<input type="file" accept=".json,application/json" hidden id="oneImport"></label><button class="danger" id="deleteBtn">作品を削除</button></div><p class="small">削除は観測データごと消去します。削除前に作品JSONを保存することをおすすめします。</p></details>
 </div></main><aside class="panel stack researcher-right"><section class="researcher-profile"><div class="sub">📊 分析研究員</div><h2 class="title" style="margin:0">律</h2><div class="researcher-visual"><div id="ritsuFallback" class="researcher-fallback">👓</div><img id="ritsuPortrait" class="researcher-portrait hidden" alt="律の立ち絵"></div><button class="wardrobe-link" type="button" data-open-wardrobe>👗 律の衣装を見る</button></section><div id="rightMessage" class="message">律「観測値を保存します」</div><p class="staff-note">こころと律は同期の研究員です。</p></aside></div><p class="small">© E-lab / 試験設備。観測は厳密に、報告はふわっと。</p></div>
+<script>window.ELAB_IS_TEST=new URLSearchParams(location.search).get('mode')==='test';</script>
 <script src="./works-store-v02.js"></script>
 <script src="./images-v03.js"></script>
 <script src="./color-band-v01.js"></script>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id), S=window.ElabWorksStore, I=window.ElabImageStore;
+const isTest=window.ELAB_IS_TEST;
+$('modeBadge').textContent=isTest?'🧪 テストモード':'通常モード';
+$('switchMode').href=isTest?'?mode=normal':'?mode=test';
+$('switchMode').textContent=isTest?'← 通常モードに戻る':'🧪 テストモードへ';
+$('modeNotice').textContent=isTest?'🧪 テストモード：作品・制作時間・気分・画像は通常モードと完全に別保存。気兼ねなく画像を試せます。記録はこのブラウザ内に保存されます。':'通常モード：本番の作品・画像を記録します。練習で画像を試すなら右上の「🧪 テストモードへ」。どちらも旧v0.1とは独立保存です。';
 if(!S){alert('保存モジュールが読み込めませんでした');return}
 const phases=S.PHASES,R=window.ElabResearchers;
 let chosen=null,score=7,phase='ラフ',moodComment=null,visibleEvents=10,imageRequest=0,imageUrls=[],colorRequest=0;
