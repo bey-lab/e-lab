@@ -63,6 +63,19 @@ body.wardrobe-open .wardrobe-screen{display:block}
 @media(max-width:1040px){.layout{grid-template-columns:minmax(180px,1fr) minmax(0,2fr) minmax(180px,1fr)}.researcher-visual{height:370px}}
 @media(max-width:920px){.layout{grid-template-columns:1fr 1fr}.researcher-visual{height:310px}}
 @media(max-width:760px){.layout{grid-template-columns:1fr}.wardrobe-columns{grid-template-columns:1fr}.researcher-visual{height:320px}.wrap{padding:10px}}
+/* Time-based research visualization */
+.timeline-meta{display:flex;justify-content:space-between;gap:8px;color:#bccbec;font-size:12px}
+.timeline-rail{width:100%;height:23px;display:flex;overflow:hidden;border-radius:9px;background:#344261;margin:10px 0}
+.timeline-segment{height:100%;flex-shrink:0;min-width:0}
+.timeline-legend{display:flex;flex-wrap:wrap;gap:8px 13px}
+.timeline-key{display:inline-flex;align-items:center;gap:5px;color:#c6d1ea;font-size:11px}
+.timeline-swatch{width:10px;height:10px;border-radius:3px}
+.timeline-caption{font-size:12px;font-weight:700;margin-top:8px}
+.timeline-moods{position:relative;height:104px;margin:6px 0 3px;border:1px solid #465878;border-radius:10px;background:#1b2846}
+.timeline-guide{position:absolute;left:0;right:0;border-top:1px dashed #506083;opacity:.45}
+.timeline-dot{position:absolute;transform:translate(-50%,50%);height:27px;min-width:27px;border-radius:50%;border:2px solid #ead5ad;background:#866ab4;color:#fff;font-size:12px;font-weight:700;padding:2px;z-index:1}
+.timeline-info{font-size:12px;color:#d5dff5;min-height:17px}
+.timeline-muted{font-size:11px;line-height:1.6;color:#afbfdf}
 </style></head>
 <body><div class="wrap">
 <header class="head"><div><div class="logo">E-lab 🔬</div><div class="small">楽しいを、研究する。／観測室・テスト運用中</div></div><div class="nav-actions"><button id="openWardrobe" type="button">👗 研究員控室</button><span id="modeBadge" class="badge">通常モード</span><a id="switchMode" class="mode-switch" href="?mode=test">🧪 テストモードへ</a></div></header>
@@ -89,6 +102,7 @@ body.wardrobe-open .wardrobe-screen{display:block}
 <div class="row"><button class="primary" id="beginBtn">▶ 開始</button><button id="pauseBtn">Ⅱ 休憩</button><button id="resumeBtn">▶ 再開</button></div>
 <div><div class="sub">現在の工程（戻っても問題ありません）</div><div id="phaseBtns" class="phases"></div></div>
 <div><div class="row between"><span class="sub">今のイイ感じ！</span><b id="scoreLabel">7 / 10</b></div><div id="scoreBtns" class="scores"></div><button id="saveMoodBtn" class="primary" style="width:100%;margin-top:9px">＋ 今の気分を観測する</button></div>
+<section class="message stack" style="gap:8px" aria-label="制作タイムライン"><div class="row between"><b>🕰️ 制作タイムライン</b><span class="small">記録から自動生成</span></div><div id="timelineView"><p class="small">制作開始後に表示します。</p></div></section>
 <div class="line"></div>
 <section class="stack"><div class="row between"><b>🖼️ 画像観測室</b><span class="small" id="imageCount">0枚</span></div>
 <label class="filebutton" style="text-align:center;background:#5669a4">＋ 画像を登録（この作品へ）<input id="imageInput" type="file" accept="image/*" hidden></label>
@@ -126,7 +140,7 @@ body.wardrobe-open .wardrobe-screen{display:block}
 <script src="./works-store-v02.js"></script>
 <script src="./images-v03.js"></script>
 <script src="./color-band-v01.js"></script>
-<script src="./observation-v01.js"></script><script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="./complete-backup-v01.js"></script>
+<script src="./observation-v01.js"></script><script src="./timeline-v01.js"></script><script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="./complete-backup-v01.js"></script>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id), S=window.ElabWorksStore, I=window.ElabImageStore;
@@ -308,8 +322,8 @@ updateResearcherPortraits();
 function render(){const works=S.list(),w=current();$('workCount').textContent='登録作品 '+works.length+' 件';$('workList').innerHTML=works.length?'':'<div class="sub">まだ作品がありません。</div>';
 for(const p of works){const b=document.createElement('button');b.className='work'+(p.id===chosen?' selected':'');b.innerHTML='<b>'+esc(p.title)+'</b><span>'+esc(p.status)+' ・ 気分 '+evs(p).filter(e=>e.type==='score').length+'件 ・ '+stamp(p.createdAt)+'</span>';b.onclick=()=>operate(()=>select(p.id));$('workList').appendChild(b)}
 $('emptyState').classList.toggle('hidden',!!w);$('workspace').classList.toggle('hidden',!w);$('workStatus').textContent=w?w.status:'未選択';
-if(!w){++imageRequest;++colorRequest;++instrumentRequest;clearImageUrls();$('instrumentContent').classList.add('hidden');$('instrumentState').textContent='観測待ち';$('instrumentText').textContent='作品を選択すると観測できます。';return;}
-if(document.activeElement!==$('editTitle'))$('editTitle').value=w.title;
+if(!w){++imageRequest;++colorRequest;++instrumentRequest;clearImageUrls();$('timelineView').replaceChildren();$('instrumentContent').classList.add('hidden');$('instrumentState').textContent='観測待ち';$('instrumentText').textContent='作品を選択すると観測できます。';return;}
+if(window.ElabTimeline)ElabTimeline.render($('timelineView'),w);if(document.activeElement!==$('editTitle'))$('editTitle').value=w.title;
 const run=running(w),has=started(w),open=w.status==='制作中';
 $('runningState').textContent=run?'観測中':has?'休憩中':'未開始';
 $('timer').textContent=fmt(elapsed(w));
