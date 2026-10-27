@@ -30,9 +30,20 @@ function validateDB(db){
  assert(db&&db.schema===SCHEMA&&Array.isArray(db.works),'作品データの形式が違います');
  const ids=new Set();
  for(const w of db.works){validateWork(w);assert(!ids.has(w.id),'作品IDが重複しています');ids.add(w.id)}
+ if(db.challenges!==undefined){
+ assert(Array.isArray(db.challenges)&&db.challenges.length<=20000,'課題一覧が不正です');
+ const taskIds=new Set();
+ for(const task of db.challenges){
+  assert(task&&typeof task.id==='string'&&task.id.length>0&&!taskIds.has(task.id),'課題IDが不正です');
+  assert(typeof task.text==='string'&&task.text.trim().length>0&&task.text.length<=500,'課題の本文が不正です');
+  assert(['active','archived'].includes(task.state),'課題状態が不正です');
+  assert(typeof task.workId==='string'&&Number.isFinite(task.createdAt)&&Number.isFinite(task.updatedAt),'課題の記録が不正です');
+  taskIds.add(task.id);
+ }
+}
  return db;
 }
-function empty(){return {schema:SCHEMA,works:[],updatedAt:Date.now()}}
+function empty(){return {schema:SCHEMA,works:[],challenges:[],updatedAt:Date.now()}}
 function read(){
  const raw=localStorage.getItem(KEY);
  return raw?validateDB(JSON.parse(raw)):empty();
@@ -76,6 +87,23 @@ function setStatus(id,status){
 function remove(id){
  change(db=>{const i=db.works.findIndex(w=>w.id===id);assert(i>=0,'作品が見つかりません');db.works.splice(i,1)});
 }
+function listChallenges(){return clone(read().challenges||[]).sort((a,b)=>b.updatedAt-a.updatedAt)}
+function addChallenge(text,workId=''){
+ const content=String(text||'').trim();assert(content.length>0&&content.length<=500,'課題を500文字以内で入力してください');
+ const timestamp=Date.now(),task={id:safeId(),text:content,state:'active',workId:String(workId||''),createdAt:timestamp,updatedAt:timestamp};
+ change(db=>{db.challenges??=[];db.challenges.push(task)});return clone(task);
+}
+function editChallenge(id,text){
+ const content=String(text||'').trim();assert(content.length>0&&content.length<=500,'課題を500文字以内で入力してください');
+ change(db=>{const task=(db.challenges||[]).find(x=>x.id===id);assert(task,'課題が見つかりません');task.text=content;task.updatedAt=Date.now()});
+}
+function setChallengeState(id,state){
+ assert(['active','archived'].includes(state),'課題状態が不正です');
+ change(db=>{const task=(db.challenges||[]).find(x=>x.id===id);assert(task,'課題が見つかりません');task.state=state;task.updatedAt=Date.now()});
+}
+function deleteChallenge(id){
+ change(db=>{db.challenges??=[];const n=db.challenges.findIndex(x=>x.id===id);assert(n>=0,'課題が見つかりません');db.challenges.splice(n,1)});
+}
 function exportWork(id){
  const w=get(id);assert(w,'作品が見つかりません');
  return JSON.stringify({schema:SCHEMA,kind:'single-work',exportedAt:new Date().toISOString(),work:w},null,2);
@@ -101,5 +129,5 @@ function importAll(json,{replace=false}={}){
  assert(replace,'全作品の置換は明示的な確認が必要です');
  return commit(doc.data);
 }
-global.ElabWorksStore=Object.freeze({KEY,SCHEMA,STATES,PHASES,read,create,get,list,rename,observe,setStatus,remove,exportWork,exportAll,importWork,importAll,validateBackup:validateDB});
+global.ElabWorksStore=Object.freeze({KEY,SCHEMA,STATES,PHASES,read,create,get,list,rename,observe,setStatus,remove,exportWork,exportAll,importWork,importAll,validateBackup:validateDB,listChallenges,addChallenge,editChallenge,setChallengeState,deleteChallenge});
 })(typeof window!=='undefined'?window:globalThis);
