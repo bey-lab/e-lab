@@ -1,7 +1,7 @@
 /* E-lab Offline Kit v1 — scope: /e-lab/test/
    Static app shell only. Artwork records remain in localStorage/IndexedDB. */
 'use strict';
-const VERSION='elab-offline-v1-20261027';
+const VERSION='elab-offline-v2-20261027';
 const SHELL=VERSION+'-shell';
 const RUNTIME=VERSION+'-runtime';
 const ROOT=new URL('./',self.registration.scope);
@@ -11,6 +11,7 @@ const ASSETS=[
  'images-v03.js',
  'color-band-v01.js',
  'observation-v01.js',
+ 'timeline-v01.js',
  'complete-backup-v01.js',
  'kokoro-a.webp','kokoro-b.webp','kokoro-c.webp',
  'ritsu-a.webp','ritsu-b.webp','ritsu-c.webp'
