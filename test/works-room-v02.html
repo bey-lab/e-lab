@@ -76,6 +76,12 @@ body.wardrobe-open .wardrobe-screen{display:block}
 .timeline-dot{position:absolute;transform:translate(-50%,50%);height:27px;min-width:27px;border-radius:50%;border:2px solid #ead5ad;background:#866ab4;color:#fff;font-size:12px;font-weight:700;padding:2px;z-index:1}
 .timeline-info{font-size:12px;color:#d5dff5;min-height:17px}
 .timeline-muted{font-size:11px;line-height:1.6;color:#afbfdf}
+#artworkHero{gap:9px}
+.artwork-stage{min-height:120px;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;padding:12px;background:#222f50;border:1px solid #526797;border-radius:15px;text-align:center;color:#bbcbee;font-size:12px;line-height:1.6}
+.artwork-stage>img{width:100%;max-height:min(48vh,480px);object-fit:contain;border-radius:10px}
+.artwork-upload{display:block;text-align:center;background:#5669a4}
+#imageAnalysis{margin-top:8px}
+@media (max-width:760px){.artwork-stage>img{max-height:55vh}}
 </style></head>
 <body><div class="wrap">
 <header class="head"><div><div class="logo">E-lab 🔬</div><div class="small">楽しいを、研究する。／観測室・テスト運用中</div></div><div class="nav-actions"><button id="openWardrobe" type="button">👗 研究員控室</button><span id="modeBadge" class="badge">通常モード</span><a id="switchMode" class="mode-switch" href="?mode=test">🧪 テストモードへ</a></div></header>
@@ -98,6 +104,12 @@ body.wardrobe-open .wardrobe-screen{display:block}
 <div id="emptyState" class="message">左の作品管理室から研究対象を選んでください。新規作品を登録してもOKです。</div>
 <div id="workspace" class="stack hidden">
 <div><label class="small" for="editTitle">作品名</label><div class="row"><input id="editTitle" maxlength="300" style="flex:1;min-width:160px"><button id="renameBtn">名前を保存</button></div></div>
+<section id="artworkHero" class="stack" aria-label="現在の作品">
+<div class="row between"><b>🖼️ 所長の作品</b><span class="small" id="imageCount">0枚</span></div>
+<div id="latestImage" class="artwork-stage">まだ画像は届いていません。</div>
+<label class="filebutton artwork-upload">＋ 新しい制作画像を登録<input id="imageInput" type="file" accept="image/*" hidden></label>
+<div id="imageError" class="notice hidden" role="alert"></div>
+</section>
 <div class="row between"><div><div class="small">制作時間（休憩を除く）</div><div class="timer" id="timer">00:00:00</div></div><div class="badge" id="runningState">待機中</div></div>
 <div class="row"><button class="primary" id="beginBtn">▶ 開始</button><button id="pauseBtn">Ⅱ 休憩</button><button id="resumeBtn">▶ 再開</button></div>
 <div><div class="sub">現在の工程（戻っても問題ありません）</div><div id="phaseBtns" class="phases"></div></div>
@@ -111,11 +123,8 @@ body.wardrobe-open .wardrobe-screen{display:block}
 </section>
 <section class="message stack" style="gap:8px" aria-label="制作タイムライン"><div class="row between"><b>🕰️ 制作タイムライン</b><span class="small">記録から自動生成</span></div><div id="timelineView"><p class="small">制作開始後に表示します。</p></div></section>
 <div class="line"></div>
-<section class="stack"><div class="row between"><b>🖼️ 画像観測室</b><span class="small" id="imageCount">0枚</span></div>
-<label class="filebutton" style="text-align:center;background:#5669a4">＋ 画像を登録（この作品へ）<input id="imageInput" type="file" accept="image/*" hidden></label>
-<div class="small">画像はこのiPadのブラウザ内に保存します。現在のJSONバックアップには画像本体が含まれません。大切な元画像はProcreate等にも保管してください。</div>
-<div id="imageError" class="notice hidden" role="alert"></div>
-<div id="latestImage" class="message">まだ画像は届いていません。</div>
+<section class="stack" id="imageAnalysis"><div class="row between"><b>📊 画像の観測結果</b><span class="small">色・変化・密度</span></div>
+<div class="small">画像はこのiPadのブラウザ内に保存します。JSONバックアップには画像本体が含まれません。大切な元画像はProcreate等にも保管してください。</div>
 <div class="message stack" id="colorReport" style="gap:8px"><b>🎨 色帯観測装置</b><div id="colorReportText" class="small">画像が登録されると色を数えます。</div>
 <div id="colorBar" class="row" style="gap:0;align-items:stretch;overflow:hidden;border-radius:9px;height:28px;background:#394463"></div>
 <div id="colorLegend" class="row" style="gap:10px"></div><div id="colorTalk" class="small"></div>
@@ -225,7 +234,7 @@ async function showImages(workId){
    $('latestImage').replaceChildren();
    if(!images.length){showInstruments([],workId);$('latestImage').textContent='まだ画像は届いていません。';$('colorReportText').textContent='画像が登録されると色を数えます。';$('colorBar').replaceChildren();$('colorLegend').replaceChildren();$('colorTalk').textContent='';return}
    const newest=images[0],head=document.createElement('div'),pic=document.createElement('img');
-   pic.src=URL.createObjectURL(newest.blob);imageUrls.push(pic.src);pic.alt='最新観測画像';pic.style.cssText='width:100%;max-height:390px;object-fit:contain;border-radius:10px';
+   pic.src=URL.createObjectURL(newest.blob);imageUrls.push(pic.src);pic.alt='最新観測画像';pic.style.cssText='width:100%;max-height:min(48vh,480px);object-fit:contain;border-radius:10px';
    head.textContent='最新の観測画像：'+newest.name+' / '+newest.width+'×'+newest.height+'px / '+stamp(newest.createdAt);showInstruments(images,workId);
    $('latestImage').append(head,pic);showColor(newest,workId);
    for(const im of images){
