@@ -102,6 +102,13 @@ body.wardrobe-open .wardrobe-screen{display:block}
 <div class="row"><button class="primary" id="beginBtn">▶ 開始</button><button id="pauseBtn">Ⅱ 休憩</button><button id="resumeBtn">▶ 再開</button></div>
 <div><div class="sub">現在の工程（戻っても問題ありません）</div><div id="phaseBtns" class="phases"></div></div>
 <div><div class="row between"><span class="sub">今のイイ感じ！</span><b id="scoreLabel">7 / 10</b></div><div id="scoreBtns" class="scores"></div><button id="saveMoodBtn" class="primary" style="width:100%;margin-top:9px">＋ 今の気分を観測する</button></div>
+<section class="message stack" id="challengePanel" aria-label="課題ノート">
+<div class="row between"><b>📌 課題ノート</b><span class="small" id="challengeCount">0件</span></div>
+<div class="small">気づいた課題をここに残そう。作品を切り替えても過去の課題を見返せます。</div>
+<form class="row" id="challengeForm"><input id="challengeText" maxlength="500" placeholder="課題を一言で記録する" aria-label="新しい課題" required style="flex:1;min-width:170px"><button class="primary" type="submit">＋ 残す</button></form>
+<div class="row"><label class="small" for="challengeFilter">表示：</label><select id="challengeFilter" style="background:#111a32;color:#edf1ff;border:1px solid #536385;border-radius:9px;padding:8px"><option value="active">取り組み中</option><option value="all">すべて（過去を含む）</option><option value="archived">保管済み</option></select></div>
+<div id="challengeList" class="stack" style="gap:8px"></div>
+</section>
 <section class="message stack" style="gap:8px" aria-label="制作タイムライン"><div class="row between"><b>🕰️ 制作タイムライン</b><span class="small">記録から自動生成</span></div><div id="timelineView"><p class="small">制作開始後に表示します。</p></div></section>
 <div class="line"></div>
 <section class="stack"><div class="row between"><b>🖼️ 画像観測室</b><span class="small" id="imageCount">0枚</span></div>
@@ -319,7 +326,35 @@ $('openWardrobe').onclick=()=>toggleWardrobe(true);
 $('closeWardrobe').onclick=()=>toggleWardrobe(false);
 document.querySelectorAll('[data-open-wardrobe]').forEach(b=>b.onclick=()=>toggleWardrobe(true));
 updateResearcherPortraits();
-function render(){const works=S.list(),w=current();$('workCount').textContent='登録作品 '+works.length+' 件';$('workList').innerHTML=works.length?'':'<div class="sub">まだ作品がありません。</div>';
+function renderChallenges(){
+ const all=S.listChallenges(),filter=$('challengeFilter').value,list=$('challengeList');
+ $('challengeCount').textContent=all.filter(t=>t.state==='active').length+'件の課題が進行中 / 計'+all.length+'件';
+ list.replaceChildren();
+ const filtered=all.filter(t=>filter==='all'||t.state===filter);
+ if(!filtered.length){const info=document.createElement('div');info.className='small';info.textContent=filter==='active'?'課題はまだありません。制作中の気づきを残そう。':'表示する課題がありません。';list.append(info);return}
+ const workNames=new Map(S.list().map(w=>[w.id,w.title]));
+ for(const task of filtered){
+  const card=document.createElement('div');card.style.cssText='background:#202d4b;border:1px solid #495b88;border-radius:11px;padding:10px;display:grid;gap:7px';
+  const text=document.createElement('div');text.textContent=task.text;text.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px';
+  const source=document.createElement('div');source.className='small';source.textContent=(workNames.get(task.workId)||'作品未指定')+' から / '+stamp(task.createdAt)+(task.state==='archived'?' / 保管済み':'');
+  const controls=document.createElement('div');controls.className='row';
+  const edit=document.createElement('button');edit.className='ghost';edit.textContent='編集';edit.onclick=()=>{
+   const revised=prompt('課題を編集（500文字まで）',task.text);
+   if(revised===null)return;
+   operate(()=>S.editChallenge(task.id,revised));
+  };
+  const status=document.createElement('button');status.textContent=task.state==='active'?'保管する':'再び取り組む';
+  status.onclick=()=>operate(()=>S.setChallengeState(task.id,task.state==='active'?'archived':'active'));
+  const del=document.createElement('button');del.className='danger';del.textContent='削除';del.onclick=()=>{
+   if(!confirm('課題「'+task.text.slice(0,60)+'」を完全に削除しますか？'))return;
+   operate(()=>S.deleteChallenge(task.id));
+  };
+  controls.append(edit,status,del);card.append(text,source,controls);list.append(card);
+ }
+}
+$('challengeForm').onsubmit=e=>{e.preventDefault();operate(()=>{S.addChallenge($('challengeText').value,chosen||'');$('challengeText').value=''})};
+$('challengeFilter').onchange=renderChallenges;
+function render(){const works=S.list(),w=current();renderChallenges();$('workCount').textContent='登録作品 '+works.length+' 件';$('workList').innerHTML=works.length?'':'<div class="sub">まだ作品がありません。</div>';
 for(const p of works){const b=document.createElement('button');b.className='work'+(p.id===chosen?' selected':'');b.innerHTML='<b>'+esc(p.title)+'</b><span>'+esc(p.status)+' ・ 気分 '+evs(p).filter(e=>e.type==='score').length+'件 ・ '+stamp(p.createdAt)+'</span>';b.onclick=()=>operate(()=>select(p.id));$('workList').appendChild(b)}
 $('emptyState').classList.toggle('hidden',!!w);$('workspace').classList.toggle('hidden',!w);$('workStatus').textContent=w?w.status:'未選択';
 if(!w){++imageRequest;++colorRequest;++instrumentRequest;clearImageUrls();$('timelineView').replaceChildren();$('instrumentContent').classList.add('hidden');$('instrumentState').textContent='観測待ち';$('instrumentText').textContent='作品を選択すると観測できます。';return;}
