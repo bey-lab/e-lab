@@ -17,6 +17,14 @@ function validateEvent(e){
  if(e.type==='score')assert(Number.isInteger(e.value)&&e.value>=1&&e.value<=10,'気分値が不正です');
  if(e.type==='status')assert(STATES.includes(e.value),'作品状態が不正です');
  if(e.type==='phase')assert(PHASES.includes(e.value),'工程が不正です');
+ if(e.type==='social'){
+  assert(['X','pixiv','Instagram','Bluesky','その他'].includes(e.platform),'SNS名が不正です');
+  assert(typeof e.postUrl==='string'&&e.postUrl.length<=500,'投稿URLが不正です');
+  assert(typeof e.note==='string'&&e.note.length<=300,'投稿メモが不正です');
+  for(const key of ['views','likes','reposts','replies','bookmarks']){
+   assert(e[key]===null||(Number.isSafeInteger(e[key])&&e[key]>=0&&e[key]<=1e12),'SNSの観測値が不正です');
+  }
+ }
 }
 function validateWork(w){
  assert(w&&typeof w==='object'&&typeof w.id==='string'&&w.id.length>0,'作品IDがありません');
