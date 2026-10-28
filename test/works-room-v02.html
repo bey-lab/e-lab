@@ -82,6 +82,13 @@ body.wardrobe-open .wardrobe-screen{display:block}
 .artwork-upload{display:block;text-align:center;background:#5669a4}
 #imageAnalysis{margin-top:8px}
 @media (max-width:760px){.artwork-stage>img{max-height:55vh}}
+.completion-backdrop{position:fixed;inset:0;z-index:100;background:#080d23cb;display:flex;align-items:center;justify-content:center;padding:18px;overflow-y:auto}
+.completion-modal{position:relative;width:min(100%,480px);background:linear-gradient(150deg,#35446e,#1e2949 78%);border:2px solid #b8a6eb;border-radius:23px;padding:25px 22px;box-shadow:0 25px 90px #0507159c;text-align:center;display:grid;gap:12px}
+.completion-modal h2{font-size:28px;margin:4px 0;color:#fff4c8}
+.completion-comment{background:#263556;border-radius:12px;padding:12px;text-align:left;font-size:14px;line-height:1.7}
+.completion-confetti{font-size:25px;letter-spacing:.2em;animation:elab-party .9s ease-in-out both}
+@keyframes elab-party{0%{opacity:0;transform:translateY(-32px) scale(.75)}70%{opacity:1;transform:translateY(7px) scale(1.08)}100%{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.completion-confetti{animation:none}}
 </style></head>
 <body><div class="wrap">
 <header class="head"><div><div class="logo">E-lab 🔬</div><div class="small">楽しいを、研究する。／観測室・テスト運用中</div></div><div class="nav-actions"><button id="openWardrobe" type="button">👗 研究員控室</button><span id="modeBadge" class="badge">通常モード</span><a id="switchMode" class="mode-switch" href="?mode=test">🧪 テストモードへ</a></div></header>
@@ -94,6 +101,16 @@ body.wardrobe-open .wardrobe-screen{display:block}
 </div>
 <p class="staff-note" style="text-align:center">衣装の選択状態だけを端末に保存します。研究員の画像はアプリ付属素材です。</p>
 </section><div id="offlineNotice" role="status" class="row" style="margin:10px 0 0;padding:9px 13px;border-radius:10px;background:#243553;border:1px solid #4b6391;font-size:12px;color:#d0defa"><span id="offlineStatus">📡 オフライン用データを準備しています…</span><button id="offlineRetry" class="ghost" type="button" style="font-size:12px;padding:7px 10px">準備を確認</button></div>
+<div id="completionBackdrop" class="completion-backdrop hidden" role="presentation">
+<section class="completion-modal" role="dialog" aria-modal="true" aria-labelledby="completionHeading">
+<div class="completion-confetti" aria-hidden="true">🎉 ✨ 🎊 ✨ 🎉</div>
+<h2 id="completionHeading">研究完了！</h2>
+<div id="completionWork" style="font-size:16px;font-weight:750;overflow-wrap:anywhere"></div>
+<div id="completionStats" class="small"></div>
+<div id="completionKokoro" class="completion-comment"></div>
+<div id="completionRitsu" class="completion-comment"></div>
+<button type="button" class="primary" id="completionClose">作品を眺める</button>
+</section></div>
 <div class="layout" style="margin-top:14px">
 <aside class="panel stack work-left"><section class="researcher-profile"><div class="sub">☀️ 感性研究員</div><h2 class="title" style="margin:0">こころ</h2><div class="researcher-visual"><div id="kokoroFallback" class="researcher-fallback">🐣</div><img id="kokoroPortrait" class="researcher-portrait hidden" alt="こころの立ち絵"></div><button class="wardrobe-link" type="button" data-open-wardrobe>👗 こころの衣装を見る</button></section><div id="leftMessage" class="message">こころ「所長、何を観測しますか？」</div><h2 class="title">📁 作品管理室</h2>
 <form id="newForm" class="row"><input id="newTitle" placeholder="作品名（例：新プロジェクト第1号）" maxlength="300" required aria-label="新しい作品名"><button class="primary" type="submit">＋ 作品を登録</button></form>
@@ -167,7 +184,7 @@ $('switchMode').textContent=isTest?'← 通常モードに戻る':'🧪 テス�
 $('modeNotice').textContent=isTest?'🧪 テストモード：作品・制作時間・気分・画像は通常モードと完全に別保存。気兼ねなく画像を試せます。記録はこのブラウザ内に保存されます。':'通常モード：本番の作品・画像を記録します。練習で画像を試すなら右上の「🧪 テストモードへ」。どちらも旧v0.1とは独立保存です。';
 if(!S){alert('保存モジュールが読み込めませんでした');return}
 const phases=S.PHASES,R=window.ElabResearchers;
-let chosen=null,score=7,phase='ラフ',moodComment=null,visibleEvents=10,imageRequest=0,imageUrls=[],colorRequest=0,instrumentRequest=0;
+let chosen=null,score=7,phase='ラフ',moodComment=null,visibleEvents=10,imageRequest=0,imageUrls=[],colorRequest=0,instrumentRequest=0,completionTalk=null;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const stamp=t=>new Date(t).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
 const fmt=ms=>{let n=Math.max(0,Math.floor(ms/1000));return [Math.floor(n/3600),Math.floor(n/60)%60,n%60].map(x=>String(x).padStart(2,'0')).join(':')};
@@ -179,12 +196,38 @@ function elapsed(w){if(!w)return 0;let sum=0,from=null;for(const e of w.events){
 function operate(task){try{task();render()}catch(err){alert('記録できませんでした。\n'+err.message)}}
 function current(){return chosen?S.get(chosen):null}
 function setPhaseFrom(w){phase=evs(w).filter(e=>e.type==='phase').at(-1)?.value||'ラフ'}
-function select(id){const prev=current();if(prev&&prev.id!==id&&running(prev))S.observe(prev.id,'pause',{reason:'作品切替'});chosen=id;setPhaseFrom(current());moodComment=null;visibleEvents=10;$('eventFilter').value='all';render();showImages(id)}
+function select(id){completionTalk=null;const prev=current();if(prev&&prev.id!==id&&running(prev))S.observe(prev.id,'pause',{reason:'作品切替'});chosen=id;setPhaseFrom(current());moodComment=null;visibleEvents=10;$('eventFilter').value='all';render();showImages(id)}
 function emit(type,extra={}){S.observe(chosen,type,extra)}
 function begin(){operate(()=>{const w=current();if(!w||w.status!=='制作中')return;if(!started(w)){emit('start');emit('phase',{value:phase})}else if(!running(w)){emit('resume')}moodComment=null})}
 function pause(){operate(()=>{if(running(current()))emit('pause');moodComment=null})}
 function resume(){operate(()=>{const w=current();if(!w||w.status!=='制作中')return;if(started(w)&&!running(w))emit('resume');moodComment=null})}
-function changeStatus(status){operate(()=>{const w=current();if(!w||w.status===status)return;if(running(w))emit('pause',{reason:'状態変更'});S.setStatus(chosen,status);moodComment=null})}
+const completionLines=[
+ ['所長ーー！ 完成おめでとうございますっ！ 今日も一枚、研究所の宝物が増えました！','制作完了を確認しました。記録も保存されています。……お疲れさまでした、所長。'],
+ ['わあっ、完成です！ 所長、やりましたね！ じっくり眺めましょう！','今回の研究も一区切りですね。制作時間と観測結果は、次の作品にも役立つはずです。'],
+ ['ぱーん！ おめでとうございます、所長！ 完成祝いですっ！','作品の完成を確認しました。……こうして形になったものを見るのは、いいですね。'],
+ ['完成ーーっ！ 所長、今日は盛大に拍手です！','一枚の作品として完成しましたね。記録した過程も、立派な研究成果です。']
+];
+function closeCompletion(){$('completionBackdrop').classList.add('hidden')}
+$('completionClose').onclick=closeCompletion;
+$('completionBackdrop').onclick=e=>{if(e.target===$('completionBackdrop'))closeCompletion()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('completionBackdrop').classList.contains('hidden'))closeCompletion()});
+function celebrateCompletion(work){
+ const pair=completionLines[Math.floor(Math.random()*completionLines.length)];
+ completionTalk={id:work.id,kokoro:pair[0],ritsu:pair[1]};
+ $('completionWork').textContent=work.title;
+ $('completionStats').textContent='制作時間 '+fmt(elapsed(work))+' ／ 気分観測 '+evs(work).filter(e=>e.type==='score').length+'件';
+ $('completionKokoro').textContent='☀️ こころ「'+pair[0]+'」';
+ $('completionRitsu').textContent='📊 律「'+pair[1]+'」';
+ $('completionBackdrop').classList.remove('hidden');
+ $('completionClose').focus();
+}
+function changeStatus(status){operate(()=>{
+ const w=current();if(!w||w.status===status)return;
+ if(running(w))emit('pause',{reason:'状態変更'});
+ S.setStatus(chosen,status);moodComment=null;
+ if(status==='完成')celebrateCompletion(S.get(chosen));
+ else completionTalk=null;
+})}
 function clearImageUrls(){for(const url of imageUrls)URL.revokeObjectURL(url);imageUrls=[]}
 async function showColor(image,workId){
  const token=++colorRequest;
@@ -378,8 +421,8 @@ $('saveMoodBtn').disabled=!has;$('eventCount').textContent=w.events.length+'件'
 $('scoreLabel').textContent=score+' / 10';
 document.querySelectorAll('[data-status]').forEach(b=>b.classList.toggle('active',b.dataset.status===w.status));
 const lastMood=evs(w).filter(e=>e.type==='score').at(-1);
-$('leftMessage').textContent='こころ「'+(moodComment||(lastMood?.value<=3?'今日は静かな観測ですねえ……':'今日は何が見つかるでしょうね！'))+'」';
-$('rightMessage').textContent='律「'+(lastMood?'直近の気分は'+lastMood.value+'です。理由は不明です。':'まだ気分の観測値はありません。')+'」';
+$('leftMessage').textContent='こころ「'+(completionTalk?.id===w.id?completionTalk.kokoro:moodComment||(lastMood?.value<=3?'今日は静かな観測ですねえ……':'今日は何が見つかるでしょうね！'))+'」';
+$('rightMessage').textContent='律「'+(completionTalk?.id===w.id?completionTalk.ritsu:lastMood?'直近の気分は'+lastMood.value+'です。理由は不明です。':'まだ気分の観測値はありません。')+'」';
 const names={start:'制作開始',pause:'休憩',resume:'制作再開',finish:'終了',phase:'工程変更',score:'気分観測',status:'作品状態',image:'画像観測'};
 const filter=$('eventFilter').value;
 const matching=w.events.filter(e=>filter==='all'||e.type===filter||(filter==='operation'&&['start','pause','resume','finish'].includes(e.type))).reverse();
