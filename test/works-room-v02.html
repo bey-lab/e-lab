@@ -160,11 +160,29 @@ body.wardrobe-open .wardrobe-screen{display:block}
 <div id="imageGallery" class="row" style="align-items:stretch"></div>
 </section>
 <div class="line"></div>
+<section id="socialPanel" class="message stack" style="gap:10px" aria-label="SNS反応観測室">
+<div class="row between"><b>📣 SNS反応観測室</b><span id="socialCount" class="small">0回観測</span></div>
+<div class="small">投稿の反応を手動で観測。空欄は「未観測」、0は「0件」です。</div>
+<form id="socialForm" class="stack" style="gap:9px">
+<div class="row"><select id="socialPlatform" aria-label="SNS" style="background:#111a32;color:#fff;border:1px solid #536385;border-radius:9px;padding:9px"><option>X</option><option>pixiv</option><option>Instagram</option><option>Bluesky</option><option>その他</option></select><input id="socialUrl" style="flex:1;min-width:140px" placeholder="投稿URL（任意）" maxlength="500" type="url"></div>
+<div class="row">
+<label class="small" style="flex:1;min-width:90px">表示数<input type="number" id="socialViews" min="0" step="1" placeholder="—"></label>
+<label class="small" style="flex:1;min-width:90px">いいね<input type="number" id="socialLikes" min="0" step="1" placeholder="—"></label>
+<label class="small" style="flex:1;min-width:90px">リポスト<input type="number" id="socialReposts" min="0" step="1" placeholder="—"></label>
+<label class="small" style="flex:1;min-width:90px">返信<input type="number" id="socialReplies" min="0" step="1" placeholder="—"></label>
+<label class="small" style="flex:1;min-width:90px">保存<input type="number" id="socialBookmarks" min="0" step="1" placeholder="—"></label>
+</div>
+<input id="socialNote" maxlength="300" placeholder="観測メモ（任意）">
+<button class="primary" type="submit">＋ SNSの反応を記録</button>
+</form>
+<div id="socialHistory" class="stack" style="gap:8px"></div>
+<div class="small">同じ投稿は同じURLで続けて記録できます。観測日時は保存時刻です。SNSへの自動接続はありません。</div>
+</section>
 <div><div class="sub">作品の現在の状態</div><div class="row"><button data-status="制作中">制作中</button><button data-status="完成">完成</button><button data-status="凍結">凍結</button><button data-status="ボツ">ボツ</button></div><p class="small">完成・凍結・ボツは評価ではなく状態です。変更履歴は残ります。いつでも制作中に戻せます。</p></div>
 
 <div class="row between"><b>観測履歴</b><span class="small" id="eventCount"></span></div>
 <div class="row between"><label class="small" for="eventFilter">表示する記録</label><select id="eventFilter" style="background:#111a32;color:#edf1ff;border:1px solid #536385;border-radius:9px;padding:8px">
-<option value="all">すべて</option><option value="score">気分</option><option value="phase">工程</option><option value="status">作品状態</option><option value="operation">開始・休憩・再開</option></select></div>
+<option value="all">すべて</option><option value="social">SNS反応</option><option value="score">気分</option><option value="phase">工程</option><option value="status">作品状態</option><option value="operation">開始・休憩・再開</option></select></div>
 <div id="events"></div><button id="moreEvents" class="ghost hidden">さらに10件表示</button>
 <p class="small">ここで表示を省略しても、観測履歴の保存件数は減りません。</p>
 <details><summary>この作品のバックアップ・削除</summary><div class="row"><button id="oneExport">作品JSONを保存</button><label class="filebutton">作品JSONを復元<input type="file" accept=".json,application/json" hidden id="oneImport"></label><button class="danger" id="deleteBtn">作品を削除</button></div><p class="small">削除は観測データごと消去します。削除前に作品JSONを保存することをおすすめします。</p></details>
@@ -406,11 +424,39 @@ function renderChallenges(){
 }
 $('challengeForm').onsubmit=e=>{e.preventDefault();operate(()=>{S.addChallenge($('challengeText').value,chosen||'');$('challengeText').value=''})};
 $('challengeFilter').onchange=renderChallenges;
+const socialFields=[['views','socialViews','表示'],['likes','socialLikes','いいね'],['reposts','socialReposts','リポスト'],['replies','socialReplies','返信'],['bookmarks','socialBookmarks','保存']];
+$('socialForm').onsubmit=e=>{e.preventDefault();operate(()=>{
+ const data={platform:$('socialPlatform').value,postUrl:$('socialUrl').value.trim(),note:$('socialNote').value.trim()};
+ for(const [key,id] of socialFields){
+  const raw=$(id).value.trim(),n=raw===''?null:Number(raw);
+  if(n!==null&&(!Number.isSafeInteger(n)||n<0||n>1e12))throw Error('SNSの数字は0以上の整数にしてください');
+  data[key]=n;
+ }
+ if(data.postUrl&&!data.postUrl.startsWith('https://'))throw Error('URLはhttps://で始めてください');
+ if(socialFields.every(([key])=>data[key]===null)&&!data.note)throw Error('数字またはメモを記録してください');
+ S.observe(chosen,'social',data);
+ $('socialNote').value='';
+})};
+function renderSocial(w){
+ const all=w.events.filter(e=>e.type==='social').slice().reverse(),area=$('socialHistory');
+ area.replaceChildren();$('socialCount').textContent=all.length+'回観測';
+ if(!all.length){const empty=document.createElement('div');empty.className='small';empty.textContent='SNSの反応はまだ記録されていません。';area.append(empty);return}
+ for(const e of all.slice(0,20)){
+  const card=document.createElement('div');card.style.cssText='padding:9px;border:1px solid #475c8b;border-radius:10px;background:#202d4b;display:grid;gap:5px';
+  const header=document.createElement('div');header.className='small';header.textContent=stamp(e.t)+' / '+e.platform;
+  const metrics=document.createElement('div');metrics.className='small';metrics.textContent=socialFields.map(([key,id,label])=>label+' '+(e[key]===null?'未観測':Number(e[key]).toLocaleString('ja-JP'))).join(' ・ ');
+  card.append(header,metrics);
+  if(e.note){const note=document.createElement('div');note.textContent=e.note;note.className='small';card.append(note)}
+  if(e.postUrl){const link=document.createElement('a');link.textContent='投稿を見る';link.href=e.postUrl;link.rel='noopener noreferrer';link.target='_blank';link.style.color='#b6caff';card.append(link)}
+  area.append(card);
+ }
+ if(all.length>20){const info=document.createElement('div');info.className='small';info.textContent='直近20件を表示。全件は観測履歴に保存されています。';area.append(info)}
+}
 function render(){const works=S.list(),w=current();renderChallenges();$('workCount').textContent='登録作品 '+works.length+' 件';$('workList').innerHTML=works.length?'':'<div class="sub">まだ作品がありません。</div>';
 for(const p of works){const b=document.createElement('button');b.className='work'+(p.id===chosen?' selected':'');b.innerHTML='<b>'+esc(p.title)+'</b><span>'+esc(p.status)+' ・ 気分 '+evs(p).filter(e=>e.type==='score').length+'件 ・ '+stamp(p.createdAt)+'</span>';b.onclick=()=>operate(()=>select(p.id));$('workList').appendChild(b)}
 $('emptyState').classList.toggle('hidden',!!w);$('workspace').classList.toggle('hidden',!w);$('workStatus').textContent=w?w.status:'未選択';
 if(!w){++imageRequest;++colorRequest;++instrumentRequest;clearImageUrls();$('timelineView').replaceChildren();$('instrumentContent').classList.add('hidden');$('instrumentState').textContent='観測待ち';$('instrumentText').textContent='作品を選択すると観測できます。';return;}
-if(window.ElabTimeline)ElabTimeline.render($('timelineView'),w);if(document.activeElement!==$('editTitle'))$('editTitle').value=w.title;
+if(window.ElabTimeline)ElabTimeline.render($('timelineView'),w);renderSocial(w);if(document.activeElement!==$('editTitle'))$('editTitle').value=w.title;
 const run=running(w),has=started(w),open=w.status==='制作中';
 $('runningState').textContent=run?'観測中':has?'休憩中':'未開始';
 $('timer').textContent=fmt(elapsed(w));
@@ -423,11 +469,11 @@ document.querySelectorAll('[data-status]').forEach(b=>b.classList.toggle('active
 const lastMood=evs(w).filter(e=>e.type==='score').at(-1);
 $('leftMessage').textContent='こころ「'+(completionTalk?.id===w.id?completionTalk.kokoro:moodComment||(lastMood?.value<=3?'今日は静かな観測ですねえ……':'今日は何が見つかるでしょうね！'))+'」';
 $('rightMessage').textContent='律「'+(completionTalk?.id===w.id?completionTalk.ritsu:lastMood?'直近の気分は'+lastMood.value+'です。理由は不明です。':'まだ気分の観測値はありません。')+'」';
-const names={start:'制作開始',pause:'休憩',resume:'制作再開',finish:'終了',phase:'工程変更',score:'気分観測',status:'作品状態',image:'画像観測'};
+const names={start:'制作開始',pause:'休憩',resume:'制作再開',finish:'終了',phase:'工程変更',score:'気分観測',status:'作品状態',image:'画像観測',social:'SNS反応'};
 const filter=$('eventFilter').value;
 const matching=w.events.filter(e=>filter==='all'||e.type===filter||(filter==='operation'&&['start','pause','resume','finish'].includes(e.type))).reverse();
 $('eventCount').textContent=w.events.length+'件保存 / '+matching.length+'件該当';
-$('events').innerHTML=matching.slice(0,visibleEvents).map(e=>'<div class="event"><time>'+stamp(e.t)+'</time>　'+esc(names[e.type]||e.type)+'　'+esc(e.type==='score'?e.value+' / 10':e.type==='image'?e.name||'画像':e.value||e.reason||'')+'</div>').join('')||(w.events.length?'該当する記録はありません。':'まだ観測履歴がありません。');
+$('events').innerHTML=matching.slice(0,visibleEvents).map(e=>'<div class="event"><time>'+stamp(e.t)+'</time>　'+esc(names[e.type]||e.type)+'　'+esc(e.type==='score'?e.value+' / 10':e.type==='image'?e.name||'画像':e.type==='social'?e.platform+' いいね '+(e.likes===null?'未観測':e.likes):e.value||e.reason||'')+'</div>').join('')||(w.events.length?'該当する記録はありません。':'まだ観測履歴がありません。');
 $('moreEvents').classList.toggle('hidden',matching.length<=visibleEvents);
 $('moreEvents').textContent='さらに10件表示（残り'+Math.max(0,matching.length-visibleEvents)+'件）';
 }
