@@ -89,6 +89,18 @@ body.wardrobe-open .wardrobe-screen{display:block}
 .completion-confetti{font-size:25px;letter-spacing:.2em;animation:elab-party .9s ease-in-out both}
 @keyframes elab-party{0%{opacity:0;transform:translateY(-32px) scale(.75)}70%{opacity:1;transform:translateY(7px) scale(1.08)}100%{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.completion-confetti{animation:none}}
+.research-shelf-label{display:flex;justify-content:space-between;gap:12px;align-items:center;font-weight:800;font-size:15px;border-top:1px solid #46577f;padding:17px 1px 2px}
+.research-shelf-label span{font-size:11px;color:#a9bbdf;font-weight:400}
+.research-fold{border:1px solid #4f628f;background:#243253;border-radius:13px;overflow:hidden}
+.research-fold>summary{display:flex;align-items:center;gap:12px;cursor:pointer;padding:15px 14px;font-size:14px;font-weight:800;list-style:none}
+.research-fold>summary::-webkit-details-marker{display:none}
+.research-fold>summary:before{content:'▸';color:#a2b7ef;font-size:17px;flex:none}
+.research-fold[open]>summary:before{content:'▾'}
+.research-fold .fold-meta{margin-left:auto;font-size:11px;color:#afc0e3;font-weight:400;text-align:right}
+.research-fold[open]>summary{border-bottom:1px solid #415579;background:#2c3d64}
+.research-fold>.fold-body{padding:14px;gap:12px}
+.research-fold>summary:focus-visible{outline:2px solid #acc5ff;outline-offset:-3px}
+@media(max-width:760px){.research-fold>summary{padding:13px 11px}.research-fold>.fold-body{padding:10px}}
 </style></head>
 <body><div class="wrap">
 <header class="head"><div><div class="logo">E-lab 🔬</div><div class="small">楽しいを、研究する。／観測室・テスト運用中</div></div><div class="nav-actions"><button id="openWardrobe" type="button">👗 研究員控室</button><span id="modeBadge" class="badge">通常モード</span><a id="switchMode" class="mode-switch" href="?mode=test">🧪 テストモードへ</a></div></header>
@@ -138,9 +150,10 @@ body.wardrobe-open .wardrobe-screen{display:block}
 <div class="row"><label class="small" for="challengeFilter">表示：</label><select id="challengeFilter" style="background:#111a32;color:#edf1ff;border:1px solid #536385;border-radius:9px;padding:8px"><option value="active">取り組み中</option><option value="all">すべて（過去を含む）</option><option value="archived">保管済み</option></select></div>
 <div id="challengeList" class="stack" style="gap:8px"></div>
 </section>
-<section class="message stack" style="gap:8px" aria-label="制作タイムライン"><div class="row between"><b>🕰️ 制作タイムライン</b><span class="small">記録から自動生成</span></div><div id="timelineView"><p class="small">制作開始後に表示します。</p></div></section>
+<div class="research-shelf-label">📚 研究結果の棚 <span>開きたい装置だけ開く</span></div>
+<details class="research-fold" id="timelineFold"><summary><span>🕰️ 制作タイムライン</span><span class="fold-meta">工程・気分の推移</span></summary><div class="fold-body stack"><div id="timelineView"><p class="small">制作開始後に表示します。</p></div></div></details>
 <div class="line"></div>
-<section class="stack" id="imageAnalysis"><div class="row between"><b>📊 画像の観測結果</b><span class="small">色・変化・密度</span></div>
+<details class="research-fold" id="imageAnalysis"><summary><span>📊 画像の観測結果</span><span class="fold-meta">色・変化・密度</span></summary><div class="fold-body stack">
 <div class="small">画像はこのiPadのブラウザ内に保存します。JSONバックアップには画像本体が含まれません。大切な元画像はProcreate等にも保管してください。</div>
 <div class="message stack" id="colorReport" style="gap:8px"><b>🎨 色帯観測装置</b><div id="colorReportText" class="small">画像が登録されると色を数えます。</div>
 <div id="colorBar" class="row" style="gap:0;align-items:stretch;overflow:hidden;border-radius:9px;height:28px;background:#394463"></div>
@@ -158,10 +171,9 @@ body.wardrobe-open .wardrobe-screen{display:block}
 <div class="small">小さく縮小した画像の色・明暗差から算出した概算です。構図変更・位置ずれ・色調整でも差は出ます。技術、上達、良し悪しを評価するものではありません。</div>
 </section>
 <div id="imageGallery" class="row" style="align-items:stretch"></div>
-</section>
+</div></details>
 <div class="line"></div>
-<section id="socialPanel" class="message stack" style="gap:10px" aria-label="SNS反応観測室">
-<div class="row between"><b>📣 SNS反応観測室</b><span id="socialCount" class="small">0回観測</span></div>
+<details class="research-fold" id="socialPanel"><summary><span>📣 SNS反応観測室</span><span class="fold-meta" id="socialCount">0回観測</span></summary><div class="fold-body stack">
 <div class="small">投稿の反応を手動で観測。空欄は「未観測」、0は「0件」です。</div>
 <form id="socialForm" class="stack" style="gap:9px">
 <div class="row"><select id="socialPlatform" aria-label="SNS" style="background:#111a32;color:#fff;border:1px solid #536385;border-radius:9px;padding:9px"><option>X</option><option>pixiv</option><option>Instagram</option><option>Bluesky</option><option>その他</option></select><input id="socialUrl" style="flex:1;min-width:140px" placeholder="投稿URL（任意）" maxlength="500" type="url"></div>
@@ -177,7 +189,7 @@ body.wardrobe-open .wardrobe-screen{display:block}
 </form>
 <div id="socialHistory" class="stack" style="gap:8px"></div>
 <div class="small">同じ投稿は同じURLで続けて記録できます。観測日時は保存時刻です。SNSへの自動接続はありません。</div>
-</section>
+</div></details>
 <div><div class="sub">作品の現在の状態</div><div class="row"><button data-status="制作中">制作中</button><button data-status="完成">完成</button><button data-status="凍結">凍結</button><button data-status="ボツ">ボツ</button></div><p class="small">完成・凍結・ボツは評価ではなく状態です。変更履歴は残ります。いつでも制作中に戻せます。</p></div>
 
 <div class="row between"><b>観測履歴</b><span class="small" id="eventCount"></span></div>
