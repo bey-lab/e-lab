@@ -101,6 +101,12 @@ body.wardrobe-open .wardrobe-screen{display:block}
 .research-fold>.fold-body{padding:14px;gap:12px}
 .research-fold>summary:focus-visible{outline:2px solid #acc5ff;outline-offset:-3px}
 @media(max-width:760px){.research-fold>summary{padding:13px 11px}.research-fold>.fold-body{padding:10px}}
+.kokoro-panel{background:#273453;border:1px solid #566898;padding:12px;border-radius:14px;gap:9px}
+.kokoro-panel textarea{width:100%;min-width:0;resize:vertical;background:#17233e;border:1px solid #5b719e;color:#edf1ff;border-radius:9px;padding:10px;font:inherit;font-size:13px}
+.gallery-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.gallery-card{min-width:0;border:1px solid #546a98;border-radius:10px;background:#1e2d4c;padding:6px;display:grid;gap:5px;text-align:left}
+.gallery-card img{display:block;width:100%;height:94px;object-fit:contain;border-radius:6px;background:#141f36}
+.gallery-card span{font-size:11px;overflow-wrap:anywhere;color:#dae5ff}
 </style></head>
 <body><div class="wrap">
 <header class="head"><div><div class="logo">E-lab 🔬</div><div class="small">楽しいを、研究する。／観測室・テスト運用中</div></div><div class="nav-actions"><button id="openWardrobe" type="button">👗 研究員控室</button><span id="modeBadge" class="badge">通常モード</span><a id="switchMode" class="mode-switch" href="?mode=test">🧪 テストモードへ</a></div></header>
@@ -124,11 +130,11 @@ body.wardrobe-open .wardrobe-screen{display:block}
 <button type="button" class="primary" id="completionClose">作品を眺める</button>
 </section></div>
 <div class="layout" style="margin-top:14px">
-<aside class="panel stack work-left"><section class="researcher-profile"><div class="sub">☀️ 感性研究員</div><h2 class="title" style="margin:0">こころ</h2><div class="researcher-visual"><div id="kokoroFallback" class="researcher-fallback">🐣</div><img id="kokoroPortrait" class="researcher-portrait hidden" alt="こころの立ち絵"></div><button class="wardrobe-link" type="button" data-open-wardrobe>👗 こころの衣装を見る</button></section><div id="leftMessage" class="message">こころ「所長、何を観測しますか？」</div><h2 class="title">📁 作品管理室</h2>
-<form id="newForm" class="row"><input id="newTitle" placeholder="作品名（例：新プロジェクト第1号）" maxlength="300" required aria-label="新しい作品名"><button class="primary" type="submit">＋ 作品を登録</button></form>
-<div class="small" id="workCount">登録作品 0 件</div><div class="list" id="workList"><div class="sub">まだ作品がありません。</div></div>
-<details open><summary>🛡️ 研究所のデータ保全</summary><div class="staff-note" style="padding:9px 0">画像も制作記録もまとめて保存します。機種変更前にはZIPをiCloud Driveなどに保管してください。</div><div class="row"><button id="completeExport" class="primary" type="button">📦 完全バックアップZIPを保存</button><label class="filebutton">📥 完全バックアップZIPを復元<input id="completeImport" type="file" accept=".zip,application/zip" hidden></label></div><p id="completeBackupStatus" class="staff-note" role="status">ZIPには画像本体を含みます。復元は既存作品を上書きしません。</p></details><details><summary>従来のJSONバックアップ（画像なし）</summary><div class="row"><button id="allExport">全作品JSONを保存</button><label class="filebutton">全作品JSONを復元<input type="file" accept=".json,application/json" hidden id="allImport"></label></div><p class="small">全作品の復元は現在の全作品を置き換えます。必ず先にバックアップを保存してください。</p></details>
-</aside>
+<aside class="panel stack work-left"><section class="researcher-profile"><div class="sub">☀️ 感性研究員</div><h2 class="title" style="margin:0">こころ</h2><div class="researcher-visual"><div id="kokoroFallback" class="researcher-fallback">🐣</div><img id="kokoroPortrait" class="researcher-portrait hidden" alt="こころの立ち絵"></div><button class="wardrobe-link" type="button" data-open-wardrobe>👗 こころの衣装を見る</button></section><div id="leftMessage" class="message">こころ「所長、何を観測しますか？」</div><section class="kokoro-panel stack"><h2 class="title">💛 こころの創作ノート</h2>
+<label class="small" for="kokoroGoal">✨ 今の目標</label><textarea id="kokoroGoal" maxlength="1000" rows="3" placeholder="こんな絵を描けるようになりたい！"></textarea>
+<label class="small" for="kokoroMemo">📝 ひらめき・好きなことメモ</label><textarea id="kokoroMemo" maxlength="4000" rows="4" placeholder="好きな表現や思いついたこと"></textarea>
+<button id="saveInspiration" class="primary" type="button">目標とメモを保存</button><div id="inspirationStatus" class="small">こころが大切に保管します。</div></section>
+<section class="kokoro-panel stack"><div class="row between"><h2 class="title" style="margin:0">🖼️ 完成作品ギャラリー</h2><span id="galleryCount" class="small">0点</span></div><div class="small">完成した絵がここに並びます。タップすると作品を開けます。</div><div id="kokoroGallery" class="gallery-grid"></div></section></aside>
 <main class="panel stack observatory"><div class="row between"><h2 class="title" style="margin:0">🔬 観測室</h2><span class="badge" id="workStatus">未選択</span></div>
 <div id="emptyState" class="message">左の作品管理室から研究対象を選んでください。新規作品を登録してもOKです。</div>
 <div id="workspace" class="stack hidden">
@@ -198,7 +204,11 @@ body.wardrobe-open .wardrobe-screen{display:block}
 <div id="events"></div><button id="moreEvents" class="ghost hidden">さらに10件表示</button>
 <p class="small">ここで表示を省略しても、観測履歴の保存件数は減りません。</p>
 <details><summary>この作品のバックアップ・削除</summary><div class="row"><button id="oneExport">作品JSONを保存</button><label class="filebutton">作品JSONを復元<input type="file" accept=".json,application/json" hidden id="oneImport"></label><button class="danger" id="deleteBtn">作品を削除</button></div><p class="small">削除は観測データごと消去します。削除前に作品JSONを保存することをおすすめします。</p></details>
-</div></main><aside class="panel stack researcher-right"><section class="researcher-profile"><div class="sub">📊 分析研究員</div><h2 class="title" style="margin:0">律</h2><div class="researcher-visual"><div id="ritsuFallback" class="researcher-fallback">👓</div><img id="ritsuPortrait" class="researcher-portrait hidden" alt="律の立ち絵"></div><button class="wardrobe-link" type="button" data-open-wardrobe>👗 律の衣装を見る</button></section><div id="rightMessage" class="message">律「観測値を保存します」</div><p class="staff-note">こころと律は同期の研究員です。</p></aside></div><p class="small">© E-lab / 試験設備。観測は厳密に、報告はふわっと。</p></div>
+</div></main><aside class="panel stack researcher-right"><section class="researcher-profile"><div class="sub">📊 分析研究員</div><h2 class="title" style="margin:0">律</h2><div class="researcher-visual"><div id="ritsuFallback" class="researcher-fallback">👓</div><img id="ritsuPortrait" class="researcher-portrait hidden" alt="律の立ち絵"></div><button class="wardrobe-link" type="button" data-open-wardrobe>👗 律の衣装を見る</button></section><div id="rightMessage" class="message">律「観測値を保存します」</div><h2 class="title">📁 作品管理室</h2>
+<form id="newForm" class="row"><input id="newTitle" placeholder="作品名（例：新プロジェクト第1号）" maxlength="300" required aria-label="新しい作品名"><button class="primary" type="submit">＋ 作品を登録</button></form>
+<div class="small" id="workCount">登録作品 0 件</div><div class="list" id="workList"><div class="sub">まだ作品がありません。</div></div>
+<details open><summary>🛡️ 研究所のデータ保全</summary><div class="staff-note" style="padding:9px 0">画像も制作記録もまとめて保存します。機種変更前にはZIPをiCloud Driveなどに保管してください。</div><div class="row"><button id="completeExport" class="primary" type="button">📦 完全バックアップZIPを保存</button><label class="filebutton">📥 完全バックアップZIPを復元<input id="completeImport" type="file" accept=".zip,application/zip" hidden></label></div><p id="completeBackupStatus" class="staff-note" role="status">ZIPには画像本体を含みます。復元は既存作品を上書きしません。</p></details><details><summary>従来のJSONバックアップ（画像なし）</summary><div class="row"><button id="allExport">全作品JSONを保存</button><label class="filebutton">全作品JSONを復元<input type="file" accept=".json,application/json" hidden id="allImport"></label></div><p class="small">全作品の復元は現在の全作品を置き換えます。必ず先にバックアップを保存してください。</p></details>
+</aside></div><p class="small">© E-lab / 試験設備。観測は厳密に、報告はふわっと。</p></div>
 <script>window.ELAB_IS_TEST=new URLSearchParams(location.search).get('mode')==='test';</script>
 <script src="./works-store-v02.js"></script>
 <script src="./images-v03.js"></script>
@@ -257,6 +267,7 @@ function changeStatus(status){operate(()=>{
  S.setStatus(chosen,status);moodComment=null;
  if(status==='完成')celebrateCompletion(S.get(chosen));
  else completionTalk=null;
+ refreshGallery();
 })}
 function clearImageUrls(){for(const url of imageUrls)URL.revokeObjectURL(url);imageUrls=[]}
 async function showColor(image,workId){
@@ -330,6 +341,7 @@ $('imageInput').onchange=async e=>{
   try{S.observe(workId,'image',{imageId:image.id,name:image.name,phase,score:prevScore})}
   catch(err){alert('画像は保存されましたが、観測履歴への記録が失敗しました。画像は削除せず保管しています。理由: '+err.message)}
   if(chosen===workId){render();await showImages(workId)}
+  refreshGallery();
  }catch(err){$('imageError').textContent='画像保存エラー: '+err.message;$('imageError').classList.remove('hidden')}
  finally{btn.style.opacity='1'}
 };
@@ -464,6 +476,26 @@ function renderSocial(w){
  }
  if(all.length>20){const info=document.createElement('div');info.className='small';info.textContent='直近20件を表示。全件は観測履歴に保存されています。';area.append(info)}
 }
+const savedInspiration=S.getInspiration();$('kokoroGoal').value=savedInspiration.goal;$('kokoroMemo').value=savedInspiration.memo;
+$('saveInspiration').onclick=()=>operate(()=>{S.saveInspiration($('kokoroGoal').value,$('kokoroMemo').value);$('inspirationStatus').textContent='保存しました！ こころ「大切に取っておきますね！」'});
+let galleryToken=0,galleryUrls=[];
+async function refreshGallery(){
+ const token=++galleryToken;galleryUrls.forEach(u=>URL.revokeObjectURL(u));galleryUrls=[];
+ const area=$('kokoroGallery');area.replaceChildren();
+ const works=S.list().filter(w=>w.status==='完成').reverse();$('galleryCount').textContent=works.length+'点';
+ if(!works.length){const empty=document.createElement('div');empty.className='small';empty.textContent='完成作品がここに増えていきます！';area.append(empty);return}
+ for(const work of works){
+  if(token!==galleryToken)return;
+  const card=document.createElement('button');card.type='button';card.className='gallery-card';
+  const label=document.createElement('span');label.textContent=work.title;
+  card.onclick=()=>{select(work.id);$('artworkHero').scrollIntoView({behavior:'smooth',block:'start'})};
+  try{
+   const imgs=await I.list(work.id);if(token!==galleryToken)return;
+   if(imgs.length){const pic=document.createElement('img'),url=URL.createObjectURL(imgs[0].blob);galleryUrls.push(url);pic.src=url;pic.alt=work.title;card.append(pic)}
+  }catch(err){const note=document.createElement('span');note.textContent='画像を読み込めませんでした';card.append(note)}
+  card.append(label);area.append(card);
+ }
+}
 function render(){const works=S.list(),w=current();renderChallenges();$('workCount').textContent='登録作品 '+works.length+' 件';$('workList').innerHTML=works.length?'':'<div class="sub">まだ作品がありません。</div>';
 for(const p of works){const b=document.createElement('button');b.className='work'+(p.id===chosen?' selected':'');b.innerHTML='<b>'+esc(p.title)+'</b><span>'+esc(p.status)+' ・ 気分 '+evs(p).filter(e=>e.type==='score').length+'件 ・ '+stamp(p.createdAt)+'</span>';b.onclick=()=>operate(()=>select(p.id));$('workList').appendChild(b)}
 $('emptyState').classList.toggle('hidden',!!w);$('workspace').classList.toggle('hidden',!w);$('workStatus').textContent=w?w.status:'未選択';
@@ -489,7 +521,7 @@ $('events').innerHTML=matching.slice(0,visibleEvents).map(e=>'<div class="event"
 $('moreEvents').classList.toggle('hidden',matching.length<=visibleEvents);
 $('moreEvents').textContent='さらに10件表示（残り'+Math.max(0,matching.length-visibleEvents)+'件）';
 }
-render();setInterval(()=>{const w=current();if(w&&running(w))$('timer').textContent=fmt(elapsed(w))},1000);
+render();refreshGallery();setInterval(()=>{const w=current();if(w&&running(w))$('timer').textContent=fmt(elapsed(w))},1000);
 })();
 </script>
 <script>
