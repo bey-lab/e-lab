@@ -206,7 +206,14 @@ body.wardrobe-open .wardrobe-screen{display:block}
 <details><summary>この作品のバックアップ・削除</summary><div class="row"><button id="oneExport">作品JSONを保存</button><label class="filebutton">作品JSONを復元<input type="file" accept=".json,application/json" hidden id="oneImport"></label><button class="danger" id="deleteBtn">作品を削除</button></div><p class="small">削除は観測データごと消去します。削除前に作品JSONを保存することをおすすめします。</p></details>
 </div></main><aside class="panel stack researcher-right"><section class="researcher-profile"><div class="sub">📊 分析研究員</div><h2 class="title" style="margin:0">律</h2><div class="researcher-visual"><div id="ritsuFallback" class="researcher-fallback">👓</div><img id="ritsuPortrait" class="researcher-portrait hidden" alt="律の立ち絵"></div><button class="wardrobe-link" type="button" data-open-wardrobe>👗 律の衣装を見る</button></section><div id="rightMessage" class="message">律「観測値を保存します」</div><h2 class="title">📁 作品管理室</h2>
 <form id="newForm" class="row"><input id="newTitle" placeholder="作品名（例：新プロジェクト第1号）" maxlength="300" required aria-label="新しい作品名"><button class="primary" type="submit">＋ 作品を登録</button></form>
-<div class="small" id="workCount">登録作品 0 件</div><div class="list" id="workList"><div class="sub">まだ作品がありません。</div></div>
+<div class="small" id="workCount">登録作品 0 件</div>
+<details id="recoveryDiagnostics" class="message" style="border:1px solid #9baee2">
+ <summary>🔎 消えた記録を調べる（読み取り専用）</summary>
+ <p class="small">端末に保存された作品と画像の件数を確認します。データの追加・削除・復元は行いません。</p>
+ <button type="button" id="runRecoveryDiagnostics" class="primary">保存領域を診断する</button>
+ <div id="recoveryDiagnosticResults" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.75;margin-top:10px" role="status">未診断</div>
+ <p class="small">調査結果には作品名が表示されます。スクリーンショットを送る場合は内容を確認してください。</p>
+</details><div class="list" id="workList"><div class="sub">まだ作品がありません。</div></div>
 <details open><summary>🛡️ 研究所のデータ保全</summary><div class="staff-note" style="padding:9px 0">画像も制作記録もまとめて保存します。機種変更前にはZIPをiCloud Driveなどに保管してください。</div><div class="row"><button id="completeExport" class="primary" type="button">📦 完全バックアップZIPを保存</button><label class="filebutton">📥 完全バックアップZIPを復元<input id="completeImport" type="file" accept=".zip,application/zip" hidden></label></div><p id="completeBackupStatus" class="staff-note" role="status">ZIPには画像本体を含みます。復元は既存作品を上書きしません。</p></details><details><summary>従来のJSONバックアップ（画像なし）</summary><div class="row"><button id="allExport">全作品JSONを保存</button><label class="filebutton">全作品JSONを復元<input type="file" accept=".json,application/json" hidden id="allImport"></label></div><p class="small">全作品の復元は現在の全作品を置き換えます。必ず先にバックアップを保存してください。</p></details>
 </aside></div><p class="small">© E-lab / 試験設備。観測は厳密に、報告はふわっと。</p></div>
 <script>window.ELAB_IS_TEST=new URLSearchParams(location.search).get('mode')==='test';</script>
@@ -558,5 +565,74 @@ render();refreshGallery();setInterval(()=>{const w=current();if(w&&running(w))$(
  }
  button.onclick=()=>{status.textContent='📡 確認しています…';if(registered)registered.update().then(verify).catch(e=>{status.textContent='⚠ '+e.message});else setup()};
  setup();
+})();
+</script><script>
+(function(){
+'use strict';
+const button=document.getElementById('runRecoveryDiagnostics');
+const output=document.getElementById('recoveryDiagnosticResults');
+if(!button||!output)return;
+function inspectLocal(key){
+ try{
+  const raw=localStorage.getItem(key);
+  if(raw===null)return '未作成（キーなし）';
+  const data=JSON.parse(raw);
+  const works=Array.isArray(data.works)?data.works:null;
+  if(!works)return '保存あり／解析不能（形式を確認）';
+  const names=works.slice(0,15).map(w=>String(w.title||'名称なし')).join('、');
+  return works.length+'作品／'+raw.length+'文字'+(names?'\n   作品名: '+names:'');
+ }catch(e){return '読み取りエラー: '+e.name+' '+e.message}
+}
+async function inspectImages(name){
+ if(!('indexedDB' in window))return 'IndexedDB非対応';
+ if(typeof indexedDB.databases==='function'){
+  try{const names=(await indexedDB.databases()).map(x=>x.name);if(!names.includes(name))return '未作成（DBなし）'}catch(e){}
+ }
+ return new Promise(resolve=>{
+  let done=false,req;
+  const finish=s=>{if(done)return;done=true;resolve(s)};
+  try{
+   req=indexedDB.open(name);
+   req.onupgradeneeded=()=>{
+    // Unknown DB must not be created by diagnosis.
+    req.transaction.abort();
+    finish('既存DBなし（新規作成を中止）');
+   };
+   req.onerror=()=>finish('読み取りエラー: '+(req.error?.name||'unknown'));
+   req.onsuccess=()=>{
+    const db=req.result;
+    if(!db.objectStoreNames.contains('snapshots')){db.close();finish('保存DBあり／画像テーブルなし');return}
+    try{
+     const tx=db.transaction('snapshots','readonly');
+     const counter=tx.objectStore('snapshots').count();
+     counter.onsuccess=()=>finish(counter.result+'枚');
+     counter.onerror=()=>finish('画像件数の確認に失敗');
+     tx.oncomplete=()=>db.close();
+     tx.onerror=()=>{db.close();finish('画像テーブルの読み取りエラー')};
+    }catch(e){db.close();finish('画像の読み取りエラー: '+e.message)}
+   };
+  }catch(e){finish('画像DBを開けません: '+e.name)}
+ });
+}
+button.addEventListener('click',async()=>{
+ button.disabled=true;output.textContent='保存領域を読み取っています…';
+ try{
+  const lines=['E-lab 保存診断（読み取り専用）',
+   '日時: '+new Date().toLocaleString('ja-JP'),
+   '実行環境: '+(window.matchMedia('(display-mode:standalone)').matches?'ホーム画面アプリ':'ブラウザ表示'),
+   '画面モード: '+(new URLSearchParams(location.search).get('mode')==='test'?'テスト':'通常'),
+   '',
+   '通常作品: '+inspectLocal('elab_works_v2'),
+   'テスト作品: '+inspectLocal('elab_works_v2_sandbox'),
+   '旧版v0.1: '+(localStorage.getItem('elab_prototype_v1')===null?'キーなし':'保存データあり'),
+   '',
+   '通常画像: '+await inspectImages('elab_images_v03'),
+   'テスト画像: '+await inspectImages('elab_images_v03_sandbox'),
+   '',
+   '※確認のみ。削除・修復は実施していません。'];
+  output.textContent=lines.join('\n');
+ }catch(e){output.textContent='診断に失敗: '+e.name+' '+e.message}
+ finally{button.disabled=false}
+});
 })();
 </script></body></html>
