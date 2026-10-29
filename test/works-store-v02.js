@@ -49,9 +49,10 @@ function validateDB(db){
   taskIds.add(task.id);
  }
 }
+ if(db.inspiration!==undefined){assert(db.inspiration&&typeof db.inspiration==='object'&&!Array.isArray(db.inspiration),'こころのノート形式が不正です');assert(typeof db.inspiration.goal==='string'&&db.inspiration.goal.length<=1000,'目標が長すぎます');assert(typeof db.inspiration.memo==='string'&&db.inspiration.memo.length<=4000,'メモが長すぎます')}
  return db;
 }
-function empty(){return {schema:SCHEMA,works:[],challenges:[],updatedAt:Date.now()}}
+function empty(){return {schema:SCHEMA,works:[],challenges:[],inspiration:{goal:'',memo:''},updatedAt:Date.now()}}
 function read(){
  const raw=localStorage.getItem(KEY);
  return raw?validateDB(JSON.parse(raw)):empty();
@@ -112,6 +113,8 @@ function setChallengeState(id,state){
 function deleteChallenge(id){
  change(db=>{db.challenges??=[];const n=db.challenges.findIndex(x=>x.id===id);assert(n>=0,'課題が見つかりません');db.challenges.splice(n,1)});
 }
+function getInspiration(){return clone(read().inspiration||{goal:'',memo:''})}
+function saveInspiration(goal,memo){const g=String(goal||'').trim(),m=String(memo||'').trim();assert(g.length<=1000&&m.length<=4000,'メモが長すぎます');change(db=>{db.inspiration={goal:g,memo:m}});return getInspiration()}
 function exportWork(id){
  const w=get(id);assert(w,'作品が見つかりません');
  return JSON.stringify({schema:SCHEMA,kind:'single-work',exportedAt:new Date().toISOString(),work:w},null,2);
@@ -137,5 +140,5 @@ function importAll(json,{replace=false}={}){
  assert(replace,'全作品の置換は明示的な確認が必要です');
  return commit(doc.data);
 }
-global.ElabWorksStore=Object.freeze({KEY,SCHEMA,STATES,PHASES,read,create,get,list,rename,observe,setStatus,remove,exportWork,exportAll,importWork,importAll,validateBackup:validateDB,listChallenges,addChallenge,editChallenge,setChallengeState,deleteChallenge});
+global.ElabWorksStore=Object.freeze({KEY,SCHEMA,STATES,PHASES,read,create,get,list,rename,observe,setStatus,remove,exportWork,exportAll,importWork,importAll,validateBackup:validateDB,listChallenges,addChallenge,editChallenge,setChallengeState,deleteChallenge,getInspiration,saveInspiration});
 })(typeof window!=='undefined'?window:globalThis);
