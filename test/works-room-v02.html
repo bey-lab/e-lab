@@ -149,16 +149,15 @@ body.wardrobe-open .wardrobe-screen{display:block}
 <div class="row"><button class="primary" id="beginBtn">▶ 開始</button><button id="pauseBtn">Ⅱ 休憩</button><button id="resumeBtn">▶ 再開</button></div>
 <div><div class="sub">現在の工程（戻っても問題ありません）</div><div id="phaseBtns" class="phases"></div></div>
 <div><div class="row between"><span class="sub">今のイイ感じ！</span><b id="scoreLabel">7 / 10</b></div><div id="scoreBtns" class="scores"></div><button id="saveMoodBtn" class="primary" style="width:100%;margin-top:9px">＋ 今の気分を観測する</button></div>
-<section class="message stack" id="challengePanel" aria-label="課題ノート">
+<section class="message stack hidden" id="challengePanel" aria-label="課題ノート" aria-hidden="true">
 <div class="row between"><b>📌 課題ノート</b><span class="small" id="challengeCount">0件</span></div>
 <div class="small">気づいた課題をここに残そう。作品を切り替えても過去の課題を見返せます。</div>
 <form class="row" id="challengeForm"><input id="challengeText" maxlength="500" placeholder="課題を一言で記録する" aria-label="新しい課題" required style="flex:1;min-width:170px"><button class="primary" type="submit">＋ 残す</button></form>
 <div class="row"><label class="small" for="challengeFilter">表示：</label><select id="challengeFilter" style="background:#111a32;color:#edf1ff;border:1px solid #536385;border-radius:9px;padding:8px"><option value="active">取り組み中</option><option value="all">すべて（過去を含む）</option><option value="archived">保管済み</option></select></div>
 <div id="challengeList" class="stack" style="gap:8px"></div>
 </section>
-<div class="research-shelf-label">📚 研究結果の棚 <span>開きたい装置だけ開く</span></div>
-<details class="research-fold" id="timelineFold"><summary><span>🕰️ 制作タイムライン</span><span class="fold-meta">工程・気分の推移</span></summary><div class="fold-body stack"><div id="timelineView"><p class="small">制作開始後に表示します。</p></div></div></details>
-<div class="line"></div>
+<details class="research-fold" id="timelineFold" open><summary><span>🕰️ 制作タイムライン</span><span class="fold-meta">工程・気分の推移</span></summary><div class="fold-body stack"><div id="timelineView"><p class="small">制作開始後に表示します。</p></div></div></details>
+<div class="research-shelf-label">📚 その他の研究結果 <span>開きたい装置だけ開く</span></div>
 <details class="research-fold" id="imageAnalysis"><summary><span>📊 画像の観測結果</span><span class="fold-meta">色・変化・密度</span></summary><div class="fold-body stack">
 <div class="small">画像はこのiPadのブラウザ内に保存します。JSONバックアップには画像本体が含まれません。大切な元画像はProcreate等にも保管してください。</div>
 <div class="message stack" id="colorReport" style="gap:8px"><b>🎨 色帯観測装置</b><div id="colorReportText" class="small">画像が登録されると色を数えます。</div>
