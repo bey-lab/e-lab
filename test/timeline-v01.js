@@ -1,7 +1,7 @@
 /* E-lab timeline v0.1 — read-only visualization of saved observations */
 (function(g){'use strict';
-const COLORS={ラフ:'#8ba7f6',線画:'#d0a2f5',着彩:'#eba990',仕上げ:'#a4dfb7',休憩:'#52607f'};
-const PHASES=['ラフ','線画','着彩','仕上げ'];
+const COLORS={ラフ:'#8ba7f6',色面:'#8fd8cd',陰影:'#f0be87',線画:'#d0a2f5',仕上げ:'#a4dfb7',構想:'#c0b8f8',資料集め:'#9ecbe1',下描き:'#aab0ef',下塗り:'#9ccfc0',背景:'#a3bf8c',加工:'#d4abce',その他:'#a9b3cd',未分類:'#8e9cb7',着彩:'#eba990',休憩:'#52607f'};
+const PHASES=['ラフ','色面','陰影','線画','仕上げ','構想','資料集め','下描き','下塗り','背景','加工','その他','未分類','着彩'];
 const time=n=>new Date(n).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
 const duration=ms=>{const min=Math.floor(ms/60000);return min>=60?Math.floor(min/60)+'時間'+(min%60)+'分':min+'分'};
 function compute(work,now=Date.now()){
@@ -28,7 +28,7 @@ function compute(work,now=Date.now()){
  }
  const end=Math.max(begin.t,active?now:last,...moods.map(e=>e.t),...images.map(e=>e.t));
  if(active)add(now);
- const total=Math.max(1,end-begin.t),durations={ラフ:0,線画:0,着彩:0,仕上げ:0,休憩:0};
+ const total=Math.max(1,end-begin.t),durations=Object.fromEntries([...PHASES,'休憩'].map(p=>[p,0]));
  for(const s of segments)durations[s.stage]+=s.to-s.from;
  return {begin:begin.t,end,total,segments,moods,images,durations,active};
 }
@@ -52,7 +52,7 @@ function render(node,work,now=Date.now()){
  if(!data.segments.length)rail.append(el('span','timeline-muted','経過を記録中'));
  node.append(rail);
  const legend=el('div','timeline-legend');
- for(const label of ['ラフ','線画','着彩','仕上げ','休憩']){
+ for(const label of [...PHASES.filter(p=>data.durations[p]>0),'休憩']){
   const tag=el('span','timeline-key');
   const swatch=el('i','timeline-swatch');swatch.style.background=COLORS[label];
   tag.append(swatch,document.createTextNode(label+' '+duration(data.durations[label])));
