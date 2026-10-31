@@ -109,7 +109,7 @@ body.wardrobe-open .wardrobe-screen{display:block}
 .gallery-card span{font-size:11px;overflow-wrap:anywhere;color:#dae5ff}
 </style></head>
 <body><div class="wrap">
-<header class="head"><div><div class="logo">E-lab 🔬</div><div class="small">楽しいを、研究する。／観測室・テスト運用中</div></div><div class="nav-actions"><button id="openWardrobe" type="button">👗 研究員控室</button><span id="modeBadge" class="badge">通常モード</span><a id="switchMode" class="mode-switch" href="?mode=test">🧪 テストモードへ</a></div></header>
+<header class="head"><div><div class="logo">E-lab 🔬</div><div class="small">楽しいを、研究する。／観測室・テスト運用中</div></div><div class="nav-actions"><a id="knowledgeTreeLink" class="mode-switch" href="./knowledge-tree-v01.html?mode=normal">🌳 知識の樹</a><button id="openWardrobe" type="button">👗 研究員控室</button><span id="modeBadge" class="badge">通常モード</span><a id="switchMode" class="mode-switch" href="?mode=test">🧪 テストモードへ</a></div></header>
 <div id="modeNotice" class="notice">これは開発版の通常モードです。v0.1の記録とは独立し、このiPad内に保存されます。iPhoneとは同期されません。</div>
 <section id="wardrobeScreen" class="wardrobe-screen" aria-label="研究員控室">
 <div class="row between"><div><h2>👗 研究員控室</h2><p class="staff-intro">こころと律の研究員の衣装を選べます。衣装は最初からアプリに含まれています。観測記録には触れません。</p></div><button id="closeWardrobe" class="primary">← 観測室に戻る</button></div>
@@ -224,6 +224,7 @@ body.wardrobe-open .wardrobe-screen{display:block}
 (()=>{'use strict';
 const $=id=>document.getElementById(id), S=window.ElabWorksStore, I=window.ElabImageStore;
 const isTest=window.ELAB_IS_TEST;
+$('knowledgeTreeLink').href='./knowledge-tree-v01.html?mode='+(isTest?'test':'normal');
 $('modeBadge').textContent=isTest?'🧪 テストモード':'通常モード';
 $('switchMode').href=isTest?'?mode=normal':'?mode=test';
 $('switchMode').textContent=isTest?'← 通常モードに戻る':'🧪 テストモードへ';
