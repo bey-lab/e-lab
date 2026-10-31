@@ -7,7 +7,7 @@ const TEST_MODE=new URLSearchParams(global.location?.search||'').get('mode')==='
 const KEY=TEST_MODE?'elab_works_v2_sandbox':'elab_works_v2';
 const SCHEMA='E-lab-works-v2';
 const STATES=['制作中','完成','凍結','ボツ'];
-const PHASES=['ラフ','線画','着彩','仕上げ'];
+const PHASES=['ラフ','色面','陰影','線画','仕上げ','構想','資料集め','下描き','下塗り','背景','加工','その他','未分類','着彩'];
 const safeId=()=>typeof crypto!=='undefined'&&typeof crypto.randomUUID==='function'
   ?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2);
 const assert=(v,message)=>{if(!v)throw new Error(message)};
