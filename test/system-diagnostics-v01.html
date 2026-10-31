@@ -1,0 +1,32 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>E-lab システム診断室</title><style>
+:root{font:15px -apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",sans-serif;background:#111a2e;color:#edf3ff}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#253960,#111a2e 72%);min-height:100vh}main{max-width:1050px;margin:auto;padding:20px 16px 50px}header{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:18px}h1{font-size:25px;margin:0 0 6px}h2{font-size:18px;margin:0 0 12px}.sub{color:#b5c6e5;font-size:13px;line-height:1.6}a,button,select{font:inherit;color:inherit;border:1px solid #657fac;border-radius:10px;padding:10px;background:#344b77;cursor:pointer}a{text-decoration:none}.layout{display:grid;grid-template-columns:1fr 1fr;gap:14px}.card{padding:17px;border:1px solid #52688d;background:#202e4c;border-radius:15px;margin-bottom:14px}.controls{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}.primary{background:#b5ccf9;color:#152440;font-weight:bold}.status{font-weight:bold;padding:10px;border-radius:10px;background:#30446c}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;padding:12px;background:#0b1325;border-radius:9px;max-height:430px;overflow:auto}.record{border-bottom:1px solid #52688d;padding:9px 0;font-size:13px}.good{color:#99d9b7}.warn{color:#ffda91}.bad{color:#ffabab}.small{font-size:12px;color:#b3c6e8}.hidden{display:none}@media(max-width:700px){.layout{grid-template-columns:1fr}h1{font-size:21px}}</style></head><body><main>
+<header><div><h1>🔬 システム診断室</h1><div class="sub">E-labの健康診断・個別研究ファイル・ラボ全体の調査（読み取り専用）</div></div><a id="back" href="./works-room-v02.html?mode=normal">← 観測室へ</a></header>
+<div class="card"><div class="sub">これは調査専用設備です。作品・画像・解放記録を変更しません。異常が出たらスクショ、または診断レポートをコピーして共有してください。</div><div class="controls"><button id="scan" class="primary">🔎 診断を実行</button><button id="copy" disabled>📋 診断レポートをコピー</button><button id="detailCopy" disabled>🧩 イベント詳細付きコピー</button></div><div id="status" class="status">未検査</div><p id="feedback" class="small"></p></div>
+<div class="layout"><section class="card"><h2>🏛 ラボ全体</h2><div id="lab" class="sub">検査を実行してください</div><h2 style="margin-top:16px">確認項目</h2><div id="checks"></div></section><section class="card"><h2>🗂 個別研究ファイル</h2><select id="work" style="width:100%;margin-bottom:14px" disabled><option>検査を実行してください</option></select><div id="workDetail" class="sub">作品を選ぶと、イベント数や画像の紐づけを確認できます。</div></section></div>
+<section class="card"><h2>🧪 技術レポート（開発者向け）</h2><div class="sub">形式・保存モード・作品ID・画像IDなどを含む。共有前に内容をご確認ください。</div><pre id="report">診断後に表示します。</pre></section>
+<div class="sub">⚠ この診断は現在開いているブラウザの保存領域だけを検査します。別のホーム画面アプリ・Safariのデータまでは確認できません。正常判定でも、バックアップZIPの復元成功は保証しません。</div>
+</main><script src="./system-diagnostics-v01.js"></script><script>
+(()=>{'use strict';const $=id=>document.getElementById(id),diagnostic=window.ElabDiagnostics;
+$('back').href='./works-room-v02.html?mode='+diagnostic.mode;
+let data=null;
+function draw(){
+ const status=data.healthy,labels={ok:'✅ 検査で重大な異常は検出されませんでした',warning:'⚠ 要確認の項目があります',error:'❌ 異常を検出しました'};
+ $('status').textContent=labels[status]||'未判定';$('status').className='status '+(status==='ok'?'good':status==='error'?'bad':'warn');
+ const works=data.works.length,images=data.images.length,lab=data.metadata||{};
+ $('lab').textContent='モード：'+data.mode+'\n作品：'+works+'件 ／ 画像：'+images+'枚\n形式：'+(lab.schema||'確認不可')+'\n作品データサイズ：'+(lab.bytes||0)+'バイト\n創作ノート：'+(lab.inspirationPresent?'あり':'未確認')+'\n課題：'+(lab.challenges??'不明')+'件\n知識の樹：'+(data.knowledge?.unlocked?.length??'未記録')+'件解放';
+ $('lab').style.whiteSpace='pre-line';
+ $('checks').replaceChildren();
+ for(const c of data.checks){const div=document.createElement('div');div.className='record '+(c.status==='error'?'bad':c.status==='warning'?'warn':'good');div.textContent=(c.status==='ok'?'✓ ':c.status==='error'?'✕ ':'△ ')+c.scope+'：'+c.message+(c.detail?'（'+c.detail+'）':'');$('checks').append(div)}
+ const selector=$('work');selector.replaceChildren();selector.disabled=data.works.length===0;
+ for(const w of data.works){const opt=document.createElement('option');opt.value=w.id;opt.textContent=w.title+' ['+w.id.slice(0,8)+']';selector.append(opt)}
+ showWork();
+ $('report').textContent=diagnostic.report(false);$('copy').disabled=false;$('detailCopy').disabled=false;
+}
+function showWork(){const w=data?.works.find(x=>x.id===$('work').value);$('workDetail').replaceChildren();if(!w){$('workDetail').textContent='作品データなし';return}
+ const p=document.createElement('pre');p.textContent=JSON.stringify({id:w.id,title:w.title,status:w.status,createdAt:w.createdAt,eventCount:w.eventCount,eventTypes:w.eventsByType,imageCount:w.imageCount,completed:w.completed,invalidEvents:w.invalidEvents},null,2);$('workDetail').append(p)}
+$('work').addEventListener('change',showWork);
+$('scan').onclick=async()=>{const button=$('scan');button.disabled=true;$('status').textContent='検査中…';try{data=await diagnostic.scan();draw();$('feedback').textContent='検査日時：'+new Date().toLocaleString('ja-JP')}catch(e){$('status').textContent='検査エラー：'+e.message}finally{button.disabled=false}};
+async function copy(detail){try{const text=diagnostic.report(detail);if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(text);else{const field=document.createElement('textarea');field.value=text;document.body.append(field);field.select();const done=document.execCommand('copy');field.remove();if(!done)throw Error('コピー機能が利用できません')} $('feedback').textContent=(detail?'詳細付き':'標準')+'レポートをコピーしました'}catch(e){$('feedback').textContent='コピー失敗：'+e.message}}
+$('copy').onclick=()=>copy(false);$('detailCopy').onclick=()=>copy(true);$('scan').click();
+})();
+</script></body></html>
