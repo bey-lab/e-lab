@@ -1,7 +1,7 @@
 /* E-lab Offline Kit v1 — scope: /e-lab/test/
    Static app shell only. Artwork records remain in localStorage/IndexedDB. */
 'use strict';
-const VERSION='elab-offline-v12-20261031-diagnostics';
+const VERSION='elab-offline-v13-20261031-flexible-phases';
 const SHELL=VERSION+'-shell';
 const RUNTIME=VERSION+'-runtime';
 const ROOT=new URL('./',self.registration.scope);
