@@ -1,0 +1,66 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#17233e"><title>E-lab 知識の樹</title>
+<style>:root{font:16px -apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",sans-serif;color:#ecf1ff;background:#10182c}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0%,#2e4168,#11172a 74%);min-height:100vh}header{max-width:1160px;margin:auto;padding:22px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}h1{margin:0;font-size:28px}main{max-width:1160px;margin:auto;padding:0 18px 40px}a,button{border:1px solid #6a80b0;border-radius:12px;background:#334770;color:#fff;padding:11px;text-decoration:none;font:inherit;cursor:pointer}button:disabled{opacity:.42;cursor:default}.card{background:#1d2a48;border:1px solid #506593;border-radius:17px;padding:18px}.small{color:#b1c3e4;font-size:13px;line-height:1.6}.stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:15px}.stat{padding:12px 18px;border-radius:12px;background:#293b61}.stat strong{font-size:24px;display:block}.layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:15px}.tree{display:grid;gap:12px}.node{display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;width:100%;background:#27395c}.node.selected{border:2px solid #ebc58e}.node.unlocked{border-color:#87c6a7}.node strong{font-size:15px}.branch{font-size:11px;color:#c1d0ec}.node-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.detail h2{margin:5px 0 10px}.detail p{line-height:1.75}.fact{border-left:3px solid #acbdef;padding:10px 13px;background:#283858;margin:12px 0}.voice{border-radius:10px;padding:12px;background:#293a5a;line-height:1.7;margin:9px 0}#error{color:#ffb6b6}#notice{min-height:1.5em}button.primary{background:#b7c8fb;color:#17203b;font-weight:bold}footer{padding:24px;text-align:center;color:#a9bad8;font-size:12px}@media(max-width:750px){.layout{grid-template-columns:1fr}h1{font-size:23px}}</style></head>
+<body><header><div><h1>🌳 E-lab 知識の樹</h1><div class="small">完成作品から研究ポイントを得て、美術史を解放しよう。</div></div><a id="back" href="./works-room-v02.html?mode=normal">← 観測室に戻る</a></header><main><div id="error" role="alert"></div>
+<div class="stats"><div class="stat"><span class="small">獲得ポイント</span><strong id="earned">—</strong></div><div class="stat"><span class="small">使用ポイント</span><strong id="spent">—</strong></div><div class="stat"><span class="small">残りポイント</span><strong id="balance">—</strong></div><div class="stat"><span class="small">解放した研究</span><strong id="unlocked">—</strong></div></div>
+<div class="layout"><section class="card"><h2>研究の分岐</h2><p class="small">興味のある枝を選ぼう。研究項目は今後追加していける。</p><div id="tree" class="tree"></div></section><section class="card detail"><div id="detail"></div><p id="notice" class="small" role="status"></p></section></div>
+<p class="small">作品データは読み取り専用。解放状況だけを専用保存領域に記録します。通常とテストは別保存。1作品IDにつき初回完成で1ポイント、過去の完成履歴にも対応します。</p></main><footer>楽しいを、研究する。— E-lab</footer>
+<script src="./knowledge-catalog-v01.js"></script><script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),isTest=new URLSearchParams(location.search).get('mode')==='test';
+$('back').href='./works-room-v02.html?mode='+(isTest?'test':'normal');
+const WORKS_KEY=isTest?'elab_works_v2_sandbox':'elab_works_v2',TREE_KEY=isTest?'elab_knowledge_tree_v1_test':'elab_knowledge_tree_v1';
+const catalog=window.ElabKnowledgeCatalog||[],byId=new Map(catalog.map(n=>[n.id,n]));
+let selected=catalog[0]?.id||'',earned=0,progress={unlocked:[]},readError='';
+function load(){
+ try{
+  const workRaw=localStorage.getItem(WORKS_KEY),works=workRaw===null?[]:JSON.parse(workRaw);
+  const list=Array.isArray(works)?works:works.works;
+  if(!Array.isArray(list)||(workRaw!==null&&!Array.isArray(works)&&works.schema!=='E-lab-works-v2'))throw Error('作品データ形式を確認できません');
+  const ids=new Set();
+  for(const w of list){
+   if(!w||typeof w.id!=='string'||!Array.isArray(w.events))throw Error('作品情報の形式が不正です');
+   if(w.status==='完成'||w.events.some(e=>e.type==='status'&&e.value==='完成'))ids.add(w.id);
+  }
+  earned=ids.size;
+  const treeRaw=localStorage.getItem(TREE_KEY);
+  if(treeRaw!==null){const saved=JSON.parse(treeRaw);if(saved?.schema!=='elab-knowledge-v1'||!Array.isArray(saved.unlocked))throw Error('研究進行データを確認できません');progress=saved}
+ }catch(e){readError=e.message;$('error').textContent='⚠ 読み込み異常：'+readError+'。データ保護のため解放操作を停止します。'}
+}
+const unique=()=>[...new Set(progress.unlocked)].filter(id=>byId.has(id));
+function render(){
+ const unlocked=unique(),balance=earned-unlocked.length;
+ $('earned').textContent=earned;$('spent').textContent=unlocked.length;$('balance').textContent=Math.max(0,balance);$('unlocked').textContent=unlocked.length+'/'+catalog.length;
+ const tree=$('tree');tree.replaceChildren();
+ for(const group of [...new Set(catalog.map(x=>x.branch))]){
+  const title=document.createElement('div');title.className='small';title.textContent='◆ '+group;tree.append(title);
+  const row=document.createElement('div');row.className='node-row';tree.append(row);
+  for(const n of catalog.filter(x=>x.branch===group)){
+   const b=document.createElement('button');b.className='node'+(unlocked.includes(n.id)?' unlocked':'')+(selected===n.id?' selected':'');
+   const ready=n.requires.every(id=>unlocked.includes(id));
+   const status=document.createElement('span');status.className='branch';status.textContent=unlocked.includes(n.id)?'✓ 研究済み':ready?'✦ 解放可能':'🔒 未解放';
+   const name=document.createElement('strong');name.textContent=n.title;
+   const era=document.createElement('span');era.className='small';era.textContent=n.era;
+   b.append(status,name,era);b.onclick=()=>{selected=n.id;render()};row.append(b);
+  }
+ }
+ const n=byId.get(selected);if(!n)return;
+ const open=unlocked.includes(n.id),ready=n.requires.every(id=>unlocked.includes(id)),detail=$('detail');detail.replaceChildren();
+ function line(tag,content,cls){const e=document.createElement(tag);e.textContent=content;if(cls)e.className=cls;detail.append(e)}
+ line('div',n.branch+' ／ '+n.era,'small');line('h2',n.title);
+ if(open){
+  line('p',n.desc);line('div','人物：'+n.person,'fact');line('div','代表作・資料：'+n.work,'fact');
+  line('div','革新・特徴：'+n.innovation,'fact');line('p','🎨 所長の制作とのつながり：'+n.connection);
+  line('div','☀️ こころ「'+n.kokoro+'」','voice');line('div','📊 律「'+n.ritsu+'」','voice');
+ }else line('p',ready?'研究ポイント1点で解放できる。どんな発見があるかな？':'まず前提となる研究を解放しよう。');
+ if(!open&&ready){
+  const b=document.createElement('button');b.className='primary';b.textContent='✦ 1 SPで研究を解放';b.disabled=balance<=0||!!readError;
+  b.onclick=()=>{if(readError||balance<=0||!n.requires.every(id=>unique().includes(id)))return;
+   const next={schema:'elab-knowledge-v1',unlocked:[...unlocked,n.id]};
+   try{localStorage.setItem(TREE_KEY,JSON.stringify(next));progress=next;$('notice').textContent='🎉 新しい研究が解放されました！';render()}catch(e){$('notice').textContent='保存失敗：'+e.message}
+  };detail.append(b);
+ }else if(!open&&!ready)line('p','必要な研究：'+n.requires.map(id=>byId.get(id)?.title||id).join('・'),'small');
+ if(!open&&ready&&balance<=0)line('p','作品を完成させると研究ポイントが手に入ります。','small');
+}
+load();render();
+})();
+</script></body></html>
