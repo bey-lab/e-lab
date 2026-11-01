@@ -148,8 +148,8 @@ body.wardrobe-open .wardrobe-screen{display:block}
 <div class="row between"><div><div class="small">制作時間（休憩を除く）</div><div class="timer" id="timer">00:00:00</div></div><div class="badge" id="runningState">待機中</div></div>
 <div class="row"><button class="primary" id="beginBtn">▶ 開始</button><button id="pauseBtn">Ⅱ 休憩</button><button id="resumeBtn">▶ 再開</button></div>
 <div><div class="sub">現在の工程（順番自由・戻ってもOK）</div><div id="phaseBtns" class="phases"></div><details class="phase-extra"><summary>＋ その他の工程</summary><div id="extraPhaseBtns" class="phases"></div></details></div>
-<section id="pauseMoodPrompt" class="message stack hidden" aria-live="polite" aria-label="休憩時の気分記録"><b>☀️ こころ「お疲れさまでした！ 今回の制作、どのくらい楽しかったですか？」</b><div class="row between"><span class="sub">休憩時の楽しさ（任意）</span><b id="pauseMoodValue">7 / 10</b></div><div id="pauseMoodChoices" class="scores"></div><div class="row"><button id="pauseMoodSave" class="primary" type="button">この気分を記録</button><button id="pauseMoodSkip" type="button">今回はスキップ</button></div><div class="sub">タイマーはもう止まっています。疲れていたらスキップしてOK。</div></section>
-<div><div class="row between"><span class="sub">今のイイ感じ！</span><b id="scoreLabel">7 / 10</b></div><div id="scoreBtns" class="scores"></div><button id="saveMoodBtn" class="primary" style="width:100%;margin-top:9px">＋ 今の気分を観測する</button></div>
+<section id="pauseMoodPrompt" class="message stack hidden" aria-live="polite" aria-label="休憩時の気分記録"><b>☀️ こころ「お疲れさまでした！ 今の気分はいかがですか？」</b><div class="row between"><span class="sub">今の気分（任意）</span><b id="pauseMoodValue">7 / 10</b></div><div id="pauseMoodChoices" class="scores"></div><div class="row"><button id="pauseMoodSave" class="primary" type="button">この気分を記録</button><button id="pauseMoodSkip" type="button">今回はスキップ</button></div><div class="sub">タイマーはもう止まっています。疲れていたらスキップしてOK。</div></section>
+
 <section class="message stack hidden" id="challengePanel" aria-label="課題ノート" aria-hidden="true">
 <div class="row between"><b>📌 課題ノート</b><span class="small" id="challengeCount">0件</span></div>
 <div class="small">気づいた課題をここに残そう。作品を切り替えても過去の課題を見返せます。</div>
@@ -233,7 +233,7 @@ $('switchMode').textContent=isTest?'← 通常モードに戻る':'🧪 テス�
 $('modeNotice').textContent=isTest?'🧪 テストモード：作品・制作時間・気分・画像は通常モードと完全に別保存。気兼ねなく画像を試せます。記録はこのブラウザ内に保存されます。':'通常モード：本番の作品・画像を記録します。練習で画像を試すなら右上の「🧪 テストモードへ」。どちらも旧v0.1とは独立保存です。';
 if(!S){alert('保存モジュールが読み込めませんでした');return}
 const phases=S.PHASES,R=window.ElabResearchers;
-let pendingPause=null,pauseMoodScore=7;let chosen=null,score=7,phase='ラフ',moodComment=null,visibleEvents=10,imageRequest=0,imageUrls=[],colorRequest=0,instrumentRequest=0,completionTalk=null;
+let pendingPause=null,pauseMoodScore=7;let chosen=null,phase='ラフ',moodComment=null,visibleEvents=10,imageRequest=0,imageUrls=[],colorRequest=0,instrumentRequest=0,completionTalk=null;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const stamp=t=>new Date(t).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
 const fmt=ms=>{let n=Math.max(0,Math.floor(ms/1000));return [Math.floor(n/3600),Math.floor(n/60)%60,n%60].map(x=>String(x).padStart(2,'0')).join(':')};
@@ -393,10 +393,10 @@ $('beginBtn').onclick=begin;$('pauseBtn').onclick=pause;$('resumeBtn').onclick=r
 $('eventFilter').onchange=()=>{visibleEvents=10;render()};
 $('moreEvents').onclick=()=>{visibleEvents+=10;render()};
 phases.forEach((p,i)=>{const b=document.createElement('button');b.textContent=p;b.dataset.phase=p;b.onclick=()=>operate(()=>{if(!running(current()))return;phase=p;emit('phase',{value:p})});(i<5?$('phaseBtns'):$('extraPhaseBtns')).appendChild(b)});
-for(let i=1;i<=10;i++){const b=document.createElement('button');b.textContent=i;b.onclick=()=>{score=i;render()};$('scoreBtns').appendChild(b);const p=document.createElement('button');p.textContent=i;p.type='button';p.onclick=()=>{pauseMoodScore=i;updatePauseMood()};$('pauseMoodChoices').appendChild(p)}
+for(let i=1;i<=10;i++){const p=document.createElement('button');p.textContent=i;p.type='button';p.onclick=()=>{pauseMoodScore=i;updatePauseMood()};$('pauseMoodChoices').appendChild(p)}
 $('pauseMoodSkip').onclick=dismissPauseMood;
-$('pauseMoodSave').onclick=()=>{if(!pendingPause)return;const pending={...pendingPause};try{const w=S.get(pending.workId);if(!w||!evs(w).some(e=>e.type==='pause'&&e.t===pending.pauseAt))throw Error('対象の休憩記録が見つかりません');S.observe(pending.workId,'score',{value:pauseMoodScore,phase,sessionEndAt:pending.pauseAt,source:'pause-prompt'});moodComment='今日の楽しさも観測できました！';dismissPauseMood();render()}catch(err){alert('気分を保存できませんでした。\n'+err.message)}};
-$('saveMoodBtn').onclick=()=>operate(()=>{emit('score',{value:score,phase});moodComment=score<=3?'今日は雲が低いようですねえ……':score>=8?'おひさまが見えるようです！':'ふむふむ、観測できました！'});
+$('pauseMoodSave').onclick=()=>{if(!pendingPause)return;const pending={...pendingPause};try{const w=S.get(pending.workId);if(!w||!evs(w).some(e=>e.type==='pause'&&e.t===pending.pauseAt))throw Error('対象の休憩記録が見つかりません');S.observe(pending.workId,'score',{value:pauseMoodScore,phase,sessionEndAt:pending.pauseAt,source:'pause-prompt'});moodComment='今の気分を観測できました！';dismissPauseMood();render()}catch(err){alert('気分を保存できませんでした。\n'+err.message)}};
+
 document.querySelectorAll('[data-status]').forEach(b=>b.onclick=()=>changeStatus(b.dataset.status));
 $('oneExport').onclick=()=>operate(()=>download('E-lab-work-'+chosen+'.json',S.exportWork(chosen)));
 $('allExport').onclick=()=>operate(()=>download('E-lab-all-works-'+new Date().toISOString().slice(0,10)+'.json',S.exportAll()));
@@ -519,10 +519,10 @@ const run=running(w),has=started(w),open=w.status==='制作中';
 $('runningState').textContent=run?'観測中':has?'休憩中':'未開始';
 $('timer').textContent=fmt(elapsed(w));
 $('beginBtn').disabled=!open||has;$('pauseBtn').disabled=!run;$('resumeBtn').disabled=!open||!has||run;
-$('saveMoodBtn').disabled=!has;$('eventCount').textContent=w.events.length+'件';
+$('eventCount').textContent=w.events.length+'件';
 [...$('phaseBtns').children,...$('extraPhaseBtns').children].forEach(b=>{b.disabled=!run;b.classList.toggle('active',b.dataset.phase===phase)});
-[...$('scoreBtns').children].forEach((b,i)=>{b.classList.toggle('active',i+1===score);b.disabled=!has});
-$('scoreLabel').textContent=score+' / 10';
+
+
 document.querySelectorAll('[data-status]').forEach(b=>b.classList.toggle('active',b.dataset.status===w.status));
 const lastMood=evs(w).filter(e=>e.type==='score').at(-1);
 $('leftMessage').textContent='こころ「'+(completionTalk?.id===w.id?completionTalk.kokoro:moodComment||(lastMood?.value<=3?'今日は静かな観測ですねえ……':'今日は何が見つかるでしょうね！'))+'」';
