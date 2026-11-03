@@ -1,7 +1,7 @@
 /* E-lab Offline Kit v1 — scope: /e-lab/test/
    Static app shell only. Artwork records remain in localStorage/IndexedDB. */
 'use strict';
-const VERSION='elab-offline-v15-20261101-single-mood-input';
+const VERSION='elab-offline-v16-20261103-toggle-breaks';
 const SHELL=VERSION+'-shell';
 const RUNTIME=VERSION+'-runtime';
 const ROOT=new URL('./',self.registration.scope);
