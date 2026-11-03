@@ -2,6 +2,7 @@
 (function(g){'use strict';
 const COLORS={ラフ:'#8ba7f6',色面:'#8fd8cd',陰影:'#f0be87',線画:'#d0a2f5',仕上げ:'#a4dfb7',構想:'#c0b8f8',資料集め:'#9ecbe1',下描き:'#aab0ef',下塗り:'#9ccfc0',背景:'#a3bf8c',加工:'#d4abce',その他:'#a9b3cd',未分類:'#8e9cb7',着彩:'#eba990',休憩:'#52607f'};
 const PHASES=['ラフ','色面','陰影','線画','仕上げ','構想','資料集め','下描き','下塗り','背景','加工','その他','未分類','着彩'];
+let showBreaks=false; // UI preference only; never modifies saved observations.
 const time=n=>new Date(n).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
 const duration=ms=>{const min=Math.floor(ms/60000);return min>=60?Math.floor(min/60)+'時間'+(min%60)+'分':min+'分'};
 function compute(work,now=Date.now()){
@@ -43,19 +44,29 @@ function render(node,work,now=Date.now()){
  const meta=el('div','timeline-meta');
  meta.append(el('span','',time(data.begin)+' 開始'),el('span','',data.active?'制作中':'最終記録 '+time(data.end)));
  node.append(meta);
+ const breakControl=el('button','','');
+ breakControl.type='button';
+ breakControl.textContent=showBreaks?'休憩を隠す':'休憩を表示';
+ breakControl.setAttribute('aria-pressed',String(showBreaks));
+ breakControl.style.cssText='padding:7px 12px;margin:8px 0;font-size:12px;border-radius:9px;cursor:pointer';
+ breakControl.onclick=()=>{showBreaks=!showBreaks;render(node,work)};
+ node.append(breakControl);
  const rail=el('div','timeline-rail');
- const cappedMs=Math.max(data.total,60000);
- for(const seg of data.segments){
+ const shownSegments=data.segments.filter(s=>showBreaks||s.active);
+ const shownDuration=shownSegments.reduce((sum,s)=>sum+s.to-s.from,0);
+ const cappedMs=Math.max(1,shownDuration);
+ for(const seg of shownSegments){
   const width=Math.max(0,(seg.to-seg.from)/cappedMs*100);
   if(width<.025)continue;
   const item=el('div','timeline-segment');
-  item.style.width=width+'%';item.style.background=COLORS[seg.stage];item.title=seg.stage+' '+time(seg.from)+'〜'+time(seg.to)+'（'+duration(seg.to-seg.from)+'）';
+  item.style.width=width+'%';item.style.background=COLORS[seg.stage]||COLORS['未分類'];item.title=seg.stage+' '+time(seg.from)+'〜'+time(seg.to)+'（'+duration(seg.to-seg.from)+'）';
   rail.append(item);
  }
- if(!data.segments.length)rail.append(el('span','timeline-muted','経過を記録中'));
+ if(!shownSegments.length)rail.append(el('span','timeline-muted','制作時間の記録がありません'));
  node.append(rail);
+ node.append(el('div','timeline-muted',showBreaks?'休憩時間を含めた割合で表示中':'制作時間だけで工程の割合を表示中（休憩記録は保存済み）'));
  const legend=el('div','timeline-legend');
- for(const label of [...PHASES.filter(p=>data.durations[p]>0),'休憩']){
+ for(const label of [...PHASES.filter(p=>data.durations[p]>0),...(showBreaks?['休憩']:[])]){
   const tag=el('span','timeline-key');
   const swatch=el('i','timeline-swatch');swatch.style.background=COLORS[label];
   tag.append(swatch,document.createTextNode(label+' '+duration(data.durations[label])));
