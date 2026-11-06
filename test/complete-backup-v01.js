@@ -77,12 +77,26 @@ async function importAll(file,onProgress){
  const existing=new Set(S().list().map(w=>w.id));
  assert(!works.works.some(w=>existing.has(w.id)),'復元直前に作品の重複が見つかりました');
  for(const im of images)assert(!(await I().get(im.id)),'復元直前に同じ画像IDが見つかりました');
- if(onProgress)onProgress('画像を端末に保存しています…');
- if(images.length)await I().importRecords(images);
- if(onProgress)onProgress('作品と観測履歴を復元しています…');
- let restored=0;
- for(const w of works.works){S().importWork({schema:S().SCHEMA,kind:'single-work',work:w},{replace:false});restored++}
- return {works:restored,images:images.length};
+ // IndexedDB and localStorage cannot share a transaction. If the final work
+ // commit fails, remove all images inserted during this restore attempt.
+ let inserted=false;
+ try{
+  if(onProgress)onProgress('画像を端末に保存しています…');
+  if(images.length){await I().importRecords(images);inserted=true}
+  if(onProgress)onProgress('作品と観測履歴を一括で復元しています…');
+  S().appendWorks(works.works);
+ }catch(error){
+  if(inserted){
+   try{
+    if(onProgress)onProgress('保存に失敗しました。追加画像を取り消しています…');
+    await I().removeRecords(images.map(im=>im.id));
+   }catch(rollbackError){
+    throw new Error('作品の復元に失敗し、追加画像の取り消しも失敗しました。診断室で孤立画像を確認してください。復元エラー: '+error.message+' / 取り消しエラー: '+rollbackError.message);
+   }
+  }
+  throw error;
+ }
+ return {works:works.works.length,images:images.length};
 }
 g.ElabCompleteBackup=Object.freeze({exportAll,inspectFile,importAll});
 })(window);
