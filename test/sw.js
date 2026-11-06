@@ -1,12 +1,16 @@
 /* E-lab Offline Kit v1 — scope: /e-lab/test/
    Static app shell only. Artwork records remain in localStorage/IndexedDB. */
 'use strict';
-const VERSION='elab-offline-v16-20261103-toggle-breaks';
+const VERSION='elab-offline-v17-20261106-modules';
 const SHELL=VERSION+'-shell';
 const RUNTIME=VERSION+'-runtime';
 const ROOT=new URL('./',self.registration.scope);
 const ASSETS=[
  'works-room-v02.html',
+ 'works-room-v02.css',
+ 'works-room-ui-v01.js',
+ 'works-room-offline-v01.js',
+ 'works-room-recovery-v01.js',
  'knowledge-tree-v01.html',
  'knowledge-catalog-v01.js',
  'system-diagnostics-v01.html',
