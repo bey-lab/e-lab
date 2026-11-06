@@ -133,6 +133,22 @@ function importWork(json,{replace=false}={}){
  });
  return doc.work.id;
 }
+// Import several works in one localStorage commit. Existing IDs are never replaced.
+function appendWorks(items){
+ assert(Array.isArray(items),'復元する作品一覧が不正です');
+ const incoming=new Set();
+ for(const w of items){
+  validateWork(w);
+  assert(!incoming.has(w.id),'復元データ内の作品IDが重複しています');
+  incoming.add(w.id);
+ }
+ change(db=>{
+  const existing=new Set(db.works.map(w=>w.id));
+  for(const w of items)assert(!existing.has(w.id),'同じIDの作品があります。復元を中止しました');
+  db.works.push(...clone(items));
+ });
+ return items.length;
+}
 function importAll(json,{replace=false}={}){
  const doc=typeof json==='string'?JSON.parse(json):clone(json);
  assert(doc&&doc.schema===SCHEMA&&doc.kind==='all-works','全作品バックアップ形式が違います');
@@ -140,5 +156,5 @@ function importAll(json,{replace=false}={}){
  assert(replace,'全作品の置換は明示的な確認が必要です');
  return commit(doc.data);
 }
-global.ElabWorksStore=Object.freeze({KEY,SCHEMA,STATES,PHASES,read,create,get,list,rename,observe,setStatus,remove,exportWork,exportAll,importWork,importAll,validateBackup:validateDB,listChallenges,addChallenge,editChallenge,setChallengeState,deleteChallenge,getInspiration,saveInspiration});
+global.ElabWorksStore=Object.freeze({KEY,SCHEMA,STATES,PHASES,read,create,get,list,rename,observe,setStatus,remove,exportWork,exportAll,importWork,appendWorks,importAll,validateBackup:validateDB,listChallenges,addChallenge,editChallenge,setChallengeState,deleteChallenge,getInspiration,saveInspiration});
 })(typeof window!=='undefined'?window:globalThis);
