@@ -37,5 +37,17 @@ async function importRecords(records){
   tx.onabort=()=>{db.close();reject(tx.error||Error('画像保存を中止しました'))};
  });
 }
-g.ElabImageStore=Object.freeze({add,list,remove,get,importRecords});
+// Roll back newly inserted restore images as one IndexedDB transaction.
+async function removeRecords(ids){
+ if(!Array.isArray(ids)||ids.some(id=>typeof id!=='string'||!id))throw Error('削除対象の画像IDが不正です');
+ const db=await connect();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(TABLE,'readwrite'),store=tx.objectStore(TABLE);
+  for(const id of ids)store.delete(id);
+  tx.oncomplete=()=>{db.close();resolve(ids.length)};
+  tx.onerror=()=>{db.close();reject(tx.error||Error('画像の取り消しに失敗しました'))};
+  tx.onabort=()=>{db.close();reject(tx.error||Error('画像の取り消しが中断されました'))};
+ });
+}
+g.ElabImageStore=Object.freeze({add,list,remove,get,importRecords,removeRecords});
 })(window);
