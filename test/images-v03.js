@@ -8,7 +8,7 @@ const req=indexedDB.open(DB,1);
 req.onupgradeneeded=()=>{let db=req.result;const s=db.createObjectStore(TABLE,{keyPath:'id'});s.createIndex('workId','workId',{unique:false})};
 req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||Error('画像データベースを開けません'))})}
 async function query(mode,worker){const db=await connect();return new Promise((resolve,reject)=>{const tx=db.transaction(TABLE,mode),store=tx.objectStore(TABLE);let result;try{result=worker(store)}catch(e){db.close();reject(e);return}
-tx.oncomplete=()=>{db.close();resolve(result&&result.result!==undefined?result.result:result)};
+tx.oncomplete=()=>{db.close();resolve(result&&typeof result==='object'&&'result' in result?result.result:result)};
 tx.onerror=()=>{db.close();reject(tx.error||Error('画像を保存できません'))};
 tx.onabort=()=>{db.close();reject(tx.error||Error('画像保存が中断されました'))}})}
 const uuid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2);
