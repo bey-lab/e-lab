@@ -8,7 +8,7 @@ const req=indexedDB.open(DB,1);
 req.onupgradeneeded=()=>{let db=req.result;const s=db.createObjectStore(TABLE,{keyPath:'id'});s.createIndex('workId','workId',{unique:false})};
 req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||Error('画像データベースを開けません'))})}
 async function query(mode,worker){const db=await connect();return new Promise((resolve,reject)=>{const tx=db.transaction(TABLE,mode),store=tx.objectStore(TABLE);let result;try{result=worker(store)}catch(e){db.close();reject(e);return}
-tx.oncomplete=()=>{db.close();resolve(result&&result.result!==undefined?result.result:result)};
+tx.oncomplete=()=>{db.close();resolve(result&&typeof result==='object'&&'result' in result?result.result:result)};
 tx.onerror=()=>{db.close();reject(tx.error||Error('画像を保存できません'))};
 tx.onabort=()=>{db.close();reject(tx.error||Error('画像保存が中断されました'))}})}
 const uuid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2);
@@ -37,5 +37,17 @@ async function importRecords(records){
   tx.onabort=()=>{db.close();reject(tx.error||Error('画像保存を中止しました'))};
  });
 }
-g.ElabImageStore=Object.freeze({add,list,remove,get,importRecords});
+// Roll back newly inserted restore images as one IndexedDB transaction.
+async function removeRecords(ids){
+ if(!Array.isArray(ids)||ids.some(id=>typeof id!=='string'||!id))throw Error('削除対象の画像IDが不正です');
+ const db=await connect();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(TABLE,'readwrite'),store=tx.objectStore(TABLE);
+  for(const id of ids)store.delete(id);
+  tx.oncomplete=()=>{db.close();resolve(ids.length)};
+  tx.onerror=()=>{db.close();reject(tx.error||Error('画像の取り消しに失敗しました'))};
+  tx.onabort=()=>{db.close();reject(tx.error||Error('画像の取り消しが中断されました'))};
+ });
+}
+g.ElabImageStore=Object.freeze({add,list,remove,get,importRecords,removeRecords});
 })(window);

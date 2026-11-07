@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>E-lab | 修繕工事の試運転</title>
+<style>
+:root{font:16px -apple-system,BlinkMacSystemFont,sans-serif;color:#eaf0ff;background:#11182d}
+*{box-sizing:border-box}body{margin:0;padding:20px}main{max-width:750px;margin:0 auto}
+section{border:1px solid #52658f;border-radius:16px;padding:20px;background:#1c2848}
+button{font:inherit;background:#a4b8f9;color:#162040;font-weight:800;border:0;border-radius:10px;padding:14px 20px}
+button:disabled{opacity:.5}pre{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.8;background:#101a31;padding:16px;border-radius:10px;min-height:100px}
+small{color:#bec9e0}.warning{padding:12px;border:1px solid #9d8c60;border-radius:8px;margin:15px 0}
+</style></head><body><main><h1>🔧 E-lab 修繕工事・試運転</h1>
+<section><p>本ページは修繕ブランチ専用のテストです。<strong>架空の作品と画像だけを一時保存し、最後に削除</strong>します。既存の作品・画像は削除しません。</p>
+<p class="warning">⚠ データ保護のため、<strong>実際の作品・依頼・契約資料をここに入力しないでください。</strong>外部プレビューホストでは、このページのコードと保存先が通常のGitHub Pagesとは異なります。</p>
+<p id="modeInfo"></p><button type="button" id="run">試験開始（架空データのみ）</button><pre id="results">試験待ちです。</pre>
+<small>試験内容：作品一括保存／重複拒否／ZIP復元／画像保存／後片付け。ブラウザ強制終了・ストレージ容量不足などはこの試験の対象外です。</small></section></main>
+<script src="./works-store-v02.js"></script>
+<script src="./images-v03.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="./complete-backup-v01.js"></script>
+<script>
+(function(){'use strict';
+const out=document.getElementById('results'),button=document.getElementById('run');
+const mode=new URLSearchParams(location.search).get('mode');
+if(mode!=='test'){
+ document.getElementById('modeInfo').textContent='安全のためテストモード専用です。URL末尾に ?mode=test を付けて開いてください。';
+ button.disabled=true;return;
+}
+document.getElementById('modeInfo').textContent='🧪 テストモードを確認しました。';
+function write(msg){out.textContent+=(out.textContent?'\n':'')+msg;}
+function assert(ok,msg){if(!ok)throw Error(msg)}
+button.onclick=async()=>{
+ button.disabled=true;out.textContent='';
+ const S=window.ElabWorksStore,I=window.ElabImageStore,B=window.ElabCompleteBackup;
+ const id='elab-smoke-'+Date.now()+'-'+Math.random().toString(36).slice(2);
+ const imageId=id+'-image';
+ let cleanupError=null,failed=false;
+ try{
+  assert(S&&I&&B&&window.JSZip,'保存・ZIPライブラリの読み込みに失敗');
+  assert(S.KEY==='elab_works_v2_sandbox','通常モードに接続されています');
+  write('✅ テスト用の保存領域を確認');
+  const work={id,title:'修繕テスト（架空）',status:'制作中',createdAt:Date.now(),events:[{type:'status',value:'制作中',t:Date.now()}]};
+  const imageBlob=new Blob([new Uint8Array([137,80,78,71,13,10,26,10])],{type:'image/png'});
+  const imagePath='images/'+encodeURIComponent(id).replace(/%/g,'_')+'/'+encodeURIComponent(imageId).replace(/%/g,'_')+'.bin';
+  const zip=new JSZip();
+  zip.file('works.json',JSON.stringify({schema:S.SCHEMA,works:[work],challenges:[],inspiration:{goal:'',memo:''},updatedAt:Date.now()}));
+  zip.file('manifest.json',JSON.stringify({schema:'elab-complete-zip-v1',createdAt:new Date().toISOString(),works:1,images:[{id:imageId,workId:id,createdAt:Date.now(),phase:'ラフ',score:null,name:'fake.png',type:'image/png',bytes:imageBlob.size,width:1,height:1,path:imagePath}]}));
+  zip.file(imagePath,imageBlob);
+  const file=new File([await zip.generateAsync({type:'blob'})],'repair-test.zip',{type:'application/zip'});
+  await B.inspectFile(file);
+  write('✅ 架空ZIPの事前検証');
+  const result=await B.importAll(file);
+  assert(result.works===1&&result.images===1,'復元した件数が一致しません');
+  assert(S.get(id)?.title===work.title,'作品情報が見つかりません');
+  assert((await I.get(imageId))?.bytes===imageBlob.size,'画像情報が見つかりません');
+  write('✅ 作品と画像の復元を確認');
+  let rejected=false;
+  try{S.appendWorks([work])}catch(e){rejected=true}
+  assert(rejected,'重複作品IDが拒否されませんでした');
+  write('✅ 作品IDの重複を拒否');
+ }catch(err){failed=true;write('❌ 試験失敗：'+err.message)}
+ finally{
+  try{if(S?.get(id))S.remove(id);if(I)await I.removeRecords([imageId]);
+   assert(!S?.get(id)&&!(await I?.get(imageId)),'テストデータが残りました');
+   write('✅ 架空データの後片付けを確認');
+  }catch(e){cleanupError=e;write('⚠ 後片付けの確認に失敗：'+e.message)}
+  write(!failed&&!cleanupError?'🎉 基本テストは全件成功（実機の全機能テストではありません）':'⚠ 問題が検出されました。結果を記録してください。');
+  button.disabled=false;
+ }
+};
+})();
+</script></body></html>
