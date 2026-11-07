@@ -37,8 +37,13 @@ async function runTest(title,callback){
 await runTest('ZIP restore and cleanup in Chromium',async(page,errors)=>{
  await page.goto(origin+'/test/repair-smoke-v01.html?mode=test');
  await page.locator('#run').click();
- await page.getByText('基本テストは全件成功',{exact:false}).waitFor({timeout:15000});
+ await page.waitForFunction(()=>{
+  const s=document.querySelector('#results')?.textContent||'';
+  return s.includes('基本テストは全件成功')||s.includes('試験失敗')||s.includes('問題が検出されました');
+ },{timeout:15000});
  const out=await page.locator('#results').innerText();
+ console.log('ZIP smoke output:',out);
+ if(!out.includes('基本テストは全件成功'))throw Error('ZIP smoke did not pass: '+out);
  if(out.includes('❌')||out.includes('⚠'))throw Error(out);
  if(errors.length)throw Error('Page errors: '+errors.join('; '));
 });
