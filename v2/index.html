@@ -12,7 +12,7 @@
 <section id="records" class="section"><h2>研究記録</h2><div class="stat"><small>全作品・全工程の累積時間</small><b id="recordTotal">0時間 0分</b></div><h3>工程別の累積時間</h3><div id="phaseStats"></div><h3>最近の研究</h3><div id="recentSessions"></div><h3>バックアップ</h3><div class="row"><button class="secondary" id="export">JSONを書き出す</button><label class="file">JSONを読み込む<input type="file" id="importFile" accept=".json,application/json"></label></div><p class="note">V2専用形式。旧E-labのデータ移行は行いません。画像はこのブラウザ内に保存され、バックアップにも含まれます。</p></section></div></div></main>
 <script>
 "use strict";
-const KEY="elab-v2-2026",RUN_KEY="elab-v2-active-run",PHASES=[["play","実験・練習","#a898da","気軽に試してみる。迷った時間も研究の一部。"],["rough","ラフ","#efb859","大きなシルエットや構図を決めよう。"],["line","線画","#79a7e4","線の強弱や形の説得力を意識しよう。"],["base","色面","#6cc4bd","まず大きな色の関係を決めよう。"],["shadow","1影","#8b92dc","大きな影で絵の印象を決めよう。"],["finish","仕上げ","#e59ab7","絵全体の視線誘導や仕上がりを確認しよう。"]];
+const KEY="elab-v2-2026",RUN_KEY="elab-v2-active-run",PHASES=[["play","研究","#a898da","実験・模写・観察・練習。迷った時間も研究の一部。"],["rough","ラフ","#efb859","大きなシルエットや構図を決めよう。"],["line","線画","#79a7e4","線の強弱や形の説得力を意識しよう。"],["base","下塗り","#6cc4bd","色分けやベースの色を決めよう。"],["shadow","陰影","#8b92dc","影・光・立体を意識して描こう。"],["finish","仕上げ","#e59ab7","絵全体の視線誘導や仕上がりを確認しよう。"]];
 const ASSIST=[["ココロ","🌱","所長すごい！ 今日も研究するんだね！"],["リツ","📘","ま、まあ……続けるのは悪くないと思います。"],["マユミ","💜","所長さん、今日もえらいえらい♡"]];
 const fresh=()=>({version:2,projects:[],sessions:[],unlocks:[],assistant:2});
 let data;try{data=JSON.parse(localStorage.getItem(KEY))}catch{}if(!data||data.version!==2||!Array.isArray(data.projects)||!Array.isArray(data.sessions))data=fresh();data.unlocks??=[];let tab="home",projectId=null,phase="play",running=null,viewSeconds=0;
