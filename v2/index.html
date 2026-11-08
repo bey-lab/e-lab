@@ -2,11 +2,12 @@
 <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#fff9ec"><title>E-lab V2 | 描いた時間は、裏切らない。</title>
 <style>
 :root{font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN",sans-serif;color:#29334e;background:#fff9ec}*{box-sizing:border-box}body{margin:0}button,input{font:inherit}button{cursor:pointer;border:0;border-radius:14px;font-weight:750;color:inherit}button:focus-visible,input:focus-visible{outline:3px solid #8e76d9;outline-offset:2px}.top{position:sticky;top:0;background:#ffffffec;backdrop-filter:blur(12px);z-index:2;display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:13px max(18px,calc((100% - 1220px)/2));border-bottom:1px solid #e9e5dc}.brand{font-size:22px;font-weight:900;margin-right:auto}.nav{padding:12px 17px;background:#eef0f6}.nav.active,.primary{background:#ffcb55;color:#423018}.main{max-width:1220px;margin:auto;padding:27px 18px 70px}.banner{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}.banner h1{margin:0;font-size:26px}.sub{color:#788092;font-size:14px}.layout{display:grid;grid-template-columns:minmax(250px,.78fr) minmax(0,1.4fr);gap:18px;align-items:start}.panel{background:white;border-radius:24px;padding:24px;box-shadow:0 8px 28px #33415c0d}.assistant-panel{background:linear-gradient(155deg,#f4e9f4,#fff);height:clamp(450px,calc(100dvh - 220px),780px);min-height:450px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}.avatar{position:relative;display:grid;place-items:center;flex:1;min-height:0;width:100%;overflow:hidden;contain:layout;background:radial-gradient(ellipse at 50% 60%,#ffffffdd 0%,transparent 74%)}
-.avatar .assistant-image{display:block;width:90%;height:92%;object-fit:contain;object-position:center center;filter:drop-shadow(0 8px 10px #2724432a)}
+.avatar .assistant-image{display:block;position:absolute;inset:0;margin:auto;width:90%;height:92%;object-fit:contain;object-position:center center;opacity:0;visibility:hidden;pointer-events:none;filter:drop-shadow(0 8px 10px #2724432a)}
+.avatar .assistant-image.active{opacity:1;visibility:visible}
 .avatar .assistant-fallback{display:none;font-size:90px}
-.avatar.image-failed .assistant-image{display:none}
+.avatar.image-failed .assistant-image{visibility:hidden}
 .avatar.image-failed .assistant-fallback{display:block}
-.assistant-role{text-align:center;font-size:12px;font-weight:800;letter-spacing:.06em;color:#827192;margin:6px 0 12px}
+.offline-status{margin-top:5px;font-size:12px;color:#6a738a}.offline-status.ready{color:#357360}.offline-status.warning{color:#a26831}.assistant-role{text-align:center;font-size:12px;font-weight:800;letter-spacing:.06em;color:#827192;margin:6px 0 12px}
 .assistant-panel[data-assistant="0"]{background:linear-gradient(155deg,#fde6f1,#fff)}
 .assistant-panel[data-assistant="1"]{background:linear-gradient(155deg,#e7edfc,#fff)}
 .assistant-panel[data-assistant="2"]{background:linear-gradient(155deg,#f8e9e3,#fff)}
@@ -22,8 +23,8 @@ body.work-mode{height:100dvh;overflow:hidden}
 .snapshot-stage{position:relative;max-width:100%;touch-action:pan-y;user-select:none}.snapshot-stage img{max-height:360px;object-fit:contain}.snapshot-strip{display:flex;gap:9px;overflow-x:auto;padding:9px 0;scroll-snap-type:x mandatory}.snapshot-thumb{flex:0 0 86px;border:2px solid transparent;background:#f2f3f8;border-radius:12px;padding:3px;scroll-snap-align:start}.snapshot-thumb.selected{border-color:#e9ae35}.snapshot-thumb img{width:100%;height:68px;object-fit:cover;border-radius:8px}.snapshot-thumb small{font-size:10px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.snapshot-actions{display:flex;gap:9px;align-items:center;justify-content:center;margin:9px 0}.snapshot-actions button{padding:8px 14px;background:#edf0f5}.snapshot-actions button:disabled{opacity:.35}.snapshot-status{text-align:center;font-size:12px;color:#68758c}.gallery{display:flex;overflow-x:auto;gap:13px;scroll-snap-type:x mandatory;padding-bottom:6px}.gallery>.art{flex:0 0 clamp(145px,25%,220px);scroll-snap-align:start}
 </style></head><body>
 <header class="top"><div class="brand">🎨 E-lab <small style="font-size:11px;color:#9399a4">V2</small></div><button class="nav active" data-tab="home">⌂ ホーム</button><button class="nav" data-tab="work">✎ 制作</button><button class="nav" data-tab="events">♡ イベント</button><button class="nav" data-tab="records">▥ 記録</button></header>
-<main class="main" id="appMain"><div class="banner"><div><h1 id="pageTitle">研究所へようこそ！</h1><div class="sub">描いた時間は、裏切らない。</div></div><span class="pill" id="spHeader">研究SP 0</span></div>
-<div class="layout"><aside class="panel assistant-panel" id="assistantPanel"><div class="avatar" id="avatar"><img class="assistant-image" id="assistantImage" alt="E-lab研究員 マユミ" src="./assets/assistants/mayumi-full.png" decoding="async" fetchpriority="high"><span class="assistant-fallback" id="assistantFallback" aria-hidden="true">💜</span></div><div><div class="assistant-role" id="assistantRole">美術史担当 · マユミ</div><div class="assist-buttons" id="assistButtons"></div><div class="bubble" id="bubble">所長さん、今日もえらいえらい♡</div></div></aside>
+<main class="main" id="appMain"><div class="banner"><div><h1 id="pageTitle">研究所へようこそ！</h1><div class="sub">描いた時間は、裏切らない。</div><div class="offline-status" id="offlineStatus" role="status" aria-live="polite">オフライン利用を準備中…</div></div><span class="pill" id="spHeader">研究SP 0</span></div>
+<div class="layout"><aside class="panel assistant-panel" id="assistantPanel"><div class="avatar" id="avatar"><img class="assistant-image" data-assistant-image="0" alt="E-lab研究員 ココロ" src="./assets/assistants/kokoro-full.png" decoding="async"><img class="assistant-image" data-assistant-image="1" alt="E-lab研究員 リツ" src="./assets/assistants/ritsu-full.png" decoding="async"><img class="assistant-image active" data-assistant-image="2" alt="E-lab研究員 マユミ" src="./assets/assistants/mayumi-full.png" decoding="async" fetchpriority="high"><span class="assistant-fallback" id="assistantFallback" aria-hidden="true">💜</span></div><div><div class="assistant-role" id="assistantRole">美術史担当 · マユミ</div><div class="assist-buttons" id="assistButtons"></div><div class="bubble" id="bubble">所長さん、今日もえらいえらい♡</div></div></aside>
 <div class="panel" id="contentPanel"><section id="home" class="section visible"><h2>今日も一歩、積み重ねよう。</h2><div class="stat"><small>✦ 総プレイ時間</small><b id="totalTime">0時間 0分</b><small id="homeSummary">研究はここから始まる。</small></div><div class="stats"><div class="smallstat"><small>今日の制作</small><strong id="todayTime">0分</strong></div><div class="smallstat"><small>研究した日数</small><strong id="activeDays">0日</strong></div></div><h3>作品を選ぶ</h3><div class="gallery" id="gallery"></div><button class="primary" id="newProject">＋ 新しい作品を始める</button><p class="note">制作を途中でやめた作品も、費やした時間は研究所に残ります。</p></section>
 <section id="work" class="section"><p class="note" style="margin:0 0 14px">🎨 制作ワークスペース · 工程を選んで時間を積み上げよう</p><h2 id="workTitle">制作する作品を選ぼう</h2><div id="snapshotStage" class="snapshot-stage"><img id="workImage" class="work-image hidden" alt="制作中の作品"></div><div id="workNoImage" class="empty">画像なしでも制作時間を記録できます</div><div class="snapshot-actions"><button type="button" id="snapshotNewer" aria-label="新しい画像へ">← 新しい</button><span id="snapshotPosition" class="snapshot-status">画像なし</span><button type="button" id="snapshotOlder" aria-label="古い画像へ">古い →</button></div><div id="snapshotStrip" class="snapshot-strip" aria-label="制作過程の画像履歴"></div><div class="snapshot-actions"><button type="button" id="snapshotDelete" class="secondary danger" disabled>選択中の画像を削除</button></div><p id="snapshotNote" class="snapshot-status">新しい画像が左。右へスワイプすると最新に戻ります。</p><div class="row" style="margin:12px 0"><label class="file">画像を登録・更新<input id="imageInput" type="file" accept="image/*"></label><button class="secondary compact" id="backGallery">別の作品を選ぶ</button></div><h3>工程を選ぶ</h3><div class="phases" id="phases"></div><p class="note" id="guide"></p><div class="clock"><span>⏱ この作品の累計制作時間</span><strong id="timer">00:00:00</strong><div class="sub" id="timerStatus">停止中・保存済み</div><div class="sub" style="margin-top:7px">今回の制作：<strong id="sessionTimer" style="font-size:16px">00:00:00</strong></div><button class="primary" id="toggleTimer">▶ スタート</button><p class="note" style="margin:9px 0 0">停止すると制作時間が自動保存されます。</p></div><h3>この作品の工程別時間</h3><div class="progress" id="projectProgress"></div><div class="phase-summary" id="projectBreakdown" aria-label="工程別の保存済み時間"></div><p class="note" id="progressHint">数字は保存時に更新。バーは計測中も成長します。</p><div class="row" style="margin-top:18px"><button class="secondary" id="completeProject">作品を完成にする</button><button class="secondary" id="reopenProject">制作中に戻す</button><button class="secondary danger" id="deleteProject">作品を削除</button></div><div id="notice" role="status"></div></section>
 <section id="events" class="section"><h2>助手との研究イベント</h2><p class="note">SPは制作時間で獲得。今は小さなイベントツリーの試作です。</p><div class="stat"><small>現在の研究SP</small><b id="eventSp">0</b></div><div id="eventsList"></div></section>
@@ -113,9 +114,13 @@ function navigate(page){const previous=tab;tab=page;document.body.classList.togg
 function safeText(el,value){el.textContent=value}
 function el(tag,cls,textValue){const node=document.createElement(tag);if(cls)node.className=cls;if(textValue!==undefined)node.textContent=textValue;return node}
 let displayedAssistant=null;
-const assistantImage=$("assistantImage");
-assistantImage.addEventListener("error",()=>{$("avatar").classList.add("image-failed")});
-assistantImage.addEventListener("load",()=>{$("avatar").classList.remove("image-failed")});
+const assistantImages=[...document.querySelectorAll("[data-assistant-image]")];
+assistantImages.forEach((img,i)=>{
+ img.addEventListener("error",()=>{if(displayedAssistant===i)$("avatar").classList.add("image-failed")});
+ img.addEventListener("load",()=>{if(displayedAssistant===i)$("avatar").classList.remove("image-failed")});
+ // Decode each portrait once in the background, rather than decoding on every switch.
+ img.decode?.().catch(()=>{});
+});
 function renderAssistant(){
  const index=Number.isInteger(data.assistant)&&data.assistant>=0&&data.assistant<ASSIST.length?data.assistant:2;
  if(displayedAssistant===index)return;
@@ -126,15 +131,14 @@ function renderAssistant(){
   const b=el("button",index===i?"selected":"",item[0]);b.type="button";
   b.setAttribute("aria-pressed",String(index===i));
   b.onclick=()=>{if(data.assistant===i)return;const old=data.assistant;data.assistant=i;if(!save()){data.assistant=old;return}renderAssistant()};
-  wrap.append(b)
+  wrap.append(b);
  });
  $("assistantPanel").dataset.assistant=String(index);
  $("assistantRole").textContent=a[4]+" · "+a[0];
  $("assistantFallback").textContent=a[1];
  $("bubble").textContent=a[2];
- assistantImage.alt="E-lab "+a[4]+" "+a[0]+"の全身立ち絵";
- const target=new URL(a[3],document.baseURI).href;
- if(assistantImage.src!==target){$("avatar").classList.remove("image-failed");assistantImage.src=target}
+ assistantImages.forEach((img,i)=>img.classList.toggle("active",i===index));
+ $("avatar").classList.toggle("image-failed",assistantImages[index].complete&&assistantImages[index].naturalWidth===0);
 }
 function renderGallery(){const g=$("gallery");g.replaceChildren();for(const p of [...data.projects].reverse()){const b=el("button","art"+(p.id===projectId?" selected":""));{const latest=snapshots.find(x=>x.projectId===p.id);if(latest){const img=el("img");const u=URL.createObjectURL(latest.blob);img.src=u;img.onload=()=>URL.revokeObjectURL(u);img.alt=p.name;b.append(img)}else if(p.image){const img=el("img");img.src=p.image;img.alt=p.name;b.append(img)}else b.append(el("div","new-art","🎨"))}const t=el("div","art-text");t.append(el("strong","",p.name),el("small","",(p.complete?"完成済 · ":"制作中 · ")+duration(sum(data.sessions.filter(s=>s.projectId===p.id)))));b.append(t);b.onclick=()=>{if(running)stop();projectId=p.id;navigate("work")};g.append(b)}if(!data.projects.length)g.append(el("div","empty","最初の作品を登録しよう！"))}
 function renderPhases(){const area=$("phases");area.replaceChildren();PHASES.forEach(([id,name,color])=>{const b=el("button","phase"+(phase===id?" active":""),name);b.style.borderLeft="6px solid "+color;b.onclick=()=>selectPhase(id);area.append(b)});$("guide").textContent=PHASES.find(x=>x[0]===phase)?.[3]||""}
@@ -251,4 +255,24 @@ $("importFile").onchange=async e=>{const file=e.target.files?.[0];if(!file)retur
 
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&running){/* 開始時刻を保持。復帰時に差分を表示 */}});setInterval(()=>{if(running){const elapsed=Math.max(0,(Date.now()-running.start)/1000);viewSeconds=Math.max(0,(Date.now()-(running.sessionStart||running.start))/1000);$("timer").textContent=clock(sum(projectSessions())+elapsed);$("sessionTimer").textContent=clock(viewSeconds);if(tab==="work")renderProgress($("projectProgress"),projectSessions(),false)}},250);
 render();recoverRun();render();refreshSnapshots().then(migrateLegacyImages);window.addEventListener("resize",()=>document.documentElement.style.setProperty("--topbar-height",document.querySelector(".top").getBoundingClientRect().height+"px"));
+
+// GitHub Pages offline shell. Research data is already stored locally.
+async function prepareOffline(){
+ const status=$("offlineStatus");
+ if(!("serviceWorker" in navigator)||!("caches" in window)){
+  status.className="offline-status warning";status.textContent="このブラウザではオフライン利用に制限があります";return;
+ }
+ try{
+  const registration=await navigator.serviceWorker.register("./sw.js",{scope:"./"});
+  await navigator.serviceWorker.ready;
+  const cache=await caches.open("elab-v2-shell-2026-11-09-01");
+  const paths=["./","./index.html","./images.js",...ASSIST.map(a=>a[3])];
+  const entries=await Promise.all(paths.map(p=>cache.match(new URL(p,document.baseURI).href)));
+  if(entries.every(Boolean)){status.className="offline-status ready";status.textContent=navigator.onLine?"✓ オフライン利用の準備完了":"✓ オフラインで利用中"}
+  else{status.className="offline-status warning";status.textContent="オフライン準備が未完了です。オンライン時に再読み込みしてください"}
+ }catch(e){status.className="offline-status warning";status.textContent="オフライン準備に失敗。通信中に再読み込みしてください";console.warn("E-lab offline install:",e)}
+}
+window.addEventListener("offline",()=>{const el=$("offlineStatus");if(el.classList.contains("ready"))el.textContent="✓ オフラインで利用中"});
+window.addEventListener("online",()=>{const el=$("offlineStatus");if(el.classList.contains("ready"))el.textContent="✓ オフライン利用の準備完了"});
+prepareOffline();
 </script></body></html>
