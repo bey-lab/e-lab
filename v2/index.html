@@ -28,7 +28,7 @@ body.work-mode{height:100dvh;overflow:hidden}
 <div class="panel" id="contentPanel"><section id="home" class="section visible"><h2>今日も一歩、積み重ねよう。</h2><div class="stat"><small>✦ 総プレイ時間</small><b id="totalTime">0時間 0分</b><small id="homeSummary">研究はここから始まる。</small></div><div class="stats"><div class="smallstat"><small>今日の制作</small><strong id="todayTime">0分</strong></div><div class="smallstat"><small>研究した日数</small><strong id="activeDays">0日</strong></div></div><h3>作品を選ぶ</h3><div class="gallery" id="gallery"></div><button class="primary" id="newProject">＋ 新しい作品を始める</button><p class="note">制作を途中でやめた作品も、費やした時間は研究所に残ります。</p></section>
 <section id="work" class="section"><p class="note" style="margin:0 0 14px">🎨 制作ワークスペース · 工程を選んで時間を積み上げよう</p><h2 id="workTitle">制作する作品を選ぼう</h2><div id="snapshotStage" class="snapshot-stage"><img id="workImage" class="work-image hidden" alt="制作中の作品"></div><div id="workNoImage" class="empty">画像なしでも制作時間を記録できます</div><div class="snapshot-actions"><button type="button" id="snapshotNewer" aria-label="新しい画像へ">← 新しい</button><span id="snapshotPosition" class="snapshot-status">画像なし</span><button type="button" id="snapshotOlder" aria-label="古い画像へ">古い →</button></div><div id="snapshotStrip" class="snapshot-strip" aria-label="制作過程の画像履歴"></div><div class="snapshot-actions"><button type="button" id="snapshotDelete" class="secondary danger" disabled>選択中の画像を削除</button></div><p id="snapshotNote" class="snapshot-status">新しい画像が左。右へスワイプすると最新に戻ります。</p><div class="row" style="margin:12px 0"><label class="file">画像を登録・更新<input id="imageInput" type="file" accept="image/*"></label><button class="secondary compact" id="backGallery">別の作品を選ぶ</button></div><h3>工程を選ぶ</h3><div class="phases" id="phases"></div><p class="note" id="guide"></p><div class="clock"><span>⏱ この作品の累計制作時間</span><strong id="timer">00:00:00</strong><div class="sub" id="timerStatus">停止中・保存済み</div><div class="sub" style="margin-top:7px">今回の制作：<strong id="sessionTimer" style="font-size:16px">00:00:00</strong></div><button class="primary" id="toggleTimer">▶ スタート</button><p class="note" style="margin:9px 0 0">停止すると制作時間が自動保存されます。</p></div><h3>この作品の工程別時間</h3><div class="progress" id="projectProgress"></div><div class="phase-summary" id="projectBreakdown" aria-label="工程別の保存済み時間"></div><p class="note" id="progressHint">数字は保存時に更新。バーは計測中も成長します。</p><div class="row" style="margin-top:18px"><button class="secondary" id="completeProject">作品を完成にする</button><button class="secondary" id="reopenProject">制作中に戻す</button><button class="secondary danger" id="deleteProject">作品を削除</button></div><div id="notice" role="status"></div></section>
 <section id="events" class="section"><h2>助手との研究イベント</h2><p class="note">SPは制作時間で獲得。今は小さなイベントツリーの試作です。</p><div class="stat"><small>現在の研究SP</small><b id="eventSp">0</b></div><div id="eventsList"></div></section>
-<section id="records" class="section"><h2>研究記録</h2><div class="stat"><small>全作品・全工程の累積時間</small><b id="recordTotal">0時間 0分</b></div><h3>工程別の累積時間</h3><div id="phaseStats"></div><h3>最近の研究</h3><div id="recentSessions"></div><h3>バックアップ</h3><div class="row"><button class="secondary" id="export">完全バックアップJSONを保存</button><label class="file">バックアップJSONを復元<input type="file" id="importFile" accept=".json,application/json"></label></div><p class="note">V2専用形式。旧E-labのデータ移行は行いません。画像は別の保存領域で管理し、完全バックアップJSONにまとめます。書き出し後はiPadの「ファイル」への保存を確認してください。</p></section></div></div></main>
+<section id="records" class="section"><h2>研究記録</h2><div class="stat"><small>全作品・全工程の累積時間</small><b id="recordTotal">0時間 0分</b></div><h3>工程別の累積時間</h3><div id="phaseStats"></div><h3>最近の研究</h3><div id="recentSessions"></div><h3>研究SP会計</h3><p class="note" id="spAccounting">SPの収支を表示します。</p><div id="spTransactions"></div><h3>バックアップ</h3><div class="row"><button class="secondary" id="export">完全バックアップJSONを保存</button><label class="file">バックアップJSONを復元<input type="file" id="importFile" accept=".json,application/json"></label></div><p class="note">V2専用形式。旧E-labのデータ移行は行いません。画像は別の保存領域で管理し、完全バックアップJSONにまとめます。書き出し後はiPadの「ファイル」への保存を確認してください。</p></section></div></div></main>
 <script src="./images.js"></script>
 <script>
 "use strict";
@@ -38,7 +38,7 @@ const ASSIST=[
  ["リツ","📘","ま、まあ……続けるのは悪くないと思います。","./assets/assistants/ritsu-full.png","分析研究員"],
  ["マユミ","💜","所長さん、今日もえらいえらい♡","./assets/assistants/mayumi-full.png","美術史研究員"]
 ];
-const fresh=()=>({version:2,projects:[],sessions:[],activeRun:null,unlocks:[],assistant:2});
+const fresh=()=>({version:2,projects:[],sessions:[],activeRun:null,unlocks:[],spLedger:[],assistant:2});
 let snapshots=[],snapProject=null,snapIndex=0,imageLoading=false;
 let data;try{data=JSON.parse(localStorage.getItem(KEY))}catch{}if(!data||data.version!==2||!Array.isArray(data.projects)||!Array.isArray(data.sessions))data=fresh();data.unlocks??=[];let tab="home",projectId=null,phase="play",running=null,viewSeconds=0;
 const $=id=>document.getElementById(id),save=()=>{try{localStorage.setItem(KEY,JSON.stringify(data));return true}catch(e){alert("保存に失敗しました。容量不足の可能性があります。バックアップを確認してください。");return false}};
@@ -49,7 +49,28 @@ const clearRun=()=>{try{localStorage.removeItem(RUN_KEY)}catch{}};
 const isSession=s=>s&&typeof s.id==="string"&&typeof s.projectId==="string"&&PHASES.some(p=>p[0]===s.phase)&&typeof s.seconds==="number"&&Number.isFinite(s.seconds)&&s.seconds>=0&&s.seconds<=86400*14&&typeof s.start==="string";
 const seconds=s=>Math.max(0,Math.floor(s)),duration=s=>{s=seconds(s);return Math.floor(s/3600)+"時間 "+Math.floor(s%3600/60)+"分"},clock=s=>{s=seconds(s);return [Math.floor(s/3600),Math.floor(s%3600/60),s%60].map(x=>String(x).padStart(2,"0")).join(":")};
 const sessionSeconds=s=>Math.max(0,Number(s.seconds)||0),sum=sessions=>sessions.reduce((n,s)=>n+sessionSeconds(s),0);
-const total=()=>sum(data.sessions),earned=()=>Math.floor(total()/600),spent=()=>data.unlocks.reduce((n,id)=>n+(EVENTS.find(e=>e.id===id)?.cost||0),0),sp=()=>Math.max(0,earned()-spent());
+// Time earnings come from the immutable session history; all other movements are ledger entries.
+const total=()=>sum(data.sessions),earned=()=>Math.floor(total()/600);
+const legacyCost={k1:1,r1:2,m1:3};
+const ledgerValid=x=>x&&typeof x.id==="string"&&typeof x.kind==="string"&&Number.isSafeInteger(x.delta)&&Math.abs(x.delta)<=1000000&&typeof x.at==="string";
+const ledger=()=>Array.isArray(data.spLedger)?data.spLedger:[];
+const spent=()=>ledger().filter(x=>x.delta<0).reduce((n,x)=>n-x.delta,0);
+const sp=()=>earned()+ledger().reduce((n,x)=>n+x.delta,0);
+function ensureLedger(){
+ if(Array.isArray(data.spLedger))return true;
+ const old=data.spLedger;
+ data.spLedger=[...new Set(data.unlocks)].map(id=>({id:"legacy:event:"+id,kind:"event",ref:id,delta:-(legacyCost[id]??EVENTS.find(e=>e.id===id)?.cost??0),at:"legacy"}));
+ if(save())return true;
+ data.spLedger=old;return false;
+}
+function purchaseEvent(e){
+ if(data.unlocks.includes(e.id)||sp()<e.cost||!ensureLedger())return;
+ const beforeUnlocks=data.unlocks,beforeLedger=data.spLedger;
+ data.unlocks=[...data.unlocks,e.id];
+ data.spLedger=[...data.spLedger,{id:"event:"+e.id,kind:"event",ref:e.id,delta:-e.cost,at:new Date().toISOString()}];
+ if(!save()){data.unlocks=beforeUnlocks;data.spLedger=beforeLedger;return}
+ render();
+}
 const project=()=>data.projects.find(x=>x.id===projectId),projectSessions=()=>data.sessions.filter(s=>s.projectId===projectId);
 const EVENTS=[{id:"k1",who:0,cost:1,title:"ココロ：好きなものを描こう",body:"所長の好きなもの、私にも教えて！"},{id:"r1",who:1,cost:2,title:"リツ：小さな技術メモ",body:"全体を縮小表示して構図を確認すると、違和感を見つけやすいです。"},{id:"m1",who:2,cost:3,title:"マユミ：研究所の休憩時間",body:"少しだけでも描いたんですね。よく頑張りました♡"}];
 // Keep active session and completed records in ONE localStorage transaction.
@@ -218,8 +239,17 @@ async function addSnapshot(file,pid){if(imageLoading)return;imageLoading=true;$(
  }catch(e){alert("画像を保存できませんでした: "+e.message);$("snapshotNote").textContent="画像の保存に失敗しました"}finally{imageLoading=false}}
 async function migrateLegacyImages(){for(const p of data.projects){if(!p.image)continue;try{if(!snapshots.some(x=>x.projectId===p.id&&x.legacy)){const resp=await fetch(p.image),blob=await resp.blob();await ElabV2Images.add({id:uid(),projectId:p.id,created:new Date(p.created||Date.now()).getTime(),seconds:0,phase:"play",legacy:true,blob})}const old=p.image;p.image=null;if(!save())p.image=old}catch(e){console.warn("旧画像の移行を見送りました",e)}}await refreshSnapshots()}
 function renderWork(){const p=project();$("workTitle").textContent=p?.name||"ホームから作品を選択してください";$("workImage").classList.toggle("hidden",!p?.image);$("workNoImage").classList.toggle("hidden",!!p?.image);if(p?.image)$("workImage").src=p.image;renderSnapshotViewer();renderPhases();const sessions=projectSessions();renderProgress($("projectProgress"),sessions);const currentRunning=running&&running.projectId===projectId;const pendingSeconds=currentRunning?Math.max(0,(Date.now()-running.start)/1000):0;const currentSession=currentRunning?Math.max(0,(Date.now()-(running.sessionStart||running.start))/1000):0;$("timer").textContent=clock(sum(sessions)+pendingSeconds);$("sessionTimer").textContent=clock(currentSession);$("timerStatus").textContent=currentRunning?"計測中・停止時に保存":"停止中・保存済み";$("toggleTimer").textContent=running?"■ ストップ":"▶ スタート";$("completeProject").disabled=!p||!!running;$("reopenProject").disabled=!p||!!running;$("deleteProject").disabled=!p||!!running;$("imageInput").disabled=!p}
-function renderEvents(){$("eventSp").textContent=sp();const area=$("eventsList");area.replaceChildren();EVENTS.forEach(e=>{const unlocked=data.unlocks.includes(e.id),card=el("div","event"+(unlocked?"":" locked")),title=el("strong","",e.title+" · "+e.cost+" SP"),body=el("p","note",unlocked?e.body:"未解放"),btn=el("button",unlocked?"secondary compact":"primary compact",unlocked?"解放済":"解放する");btn.disabled=unlocked||sp()<e.cost;btn.onclick=()=>{if(sp()<e.cost)return;data.unlocks.push(e.id);save();render()};card.append(title,body,btn);area.append(card)})}
-function renderRecords(){$("recordTotal").textContent=duration(total());const stats=$("phaseStats");stats.replaceChildren();for(const [id,name,color] of PHASES){const sec=sum(data.sessions.filter(s=>s.phase===id)),line=el("div","row spread");line.style.padding="10px 0";const label=el("span","",name);label.style.borderLeft="6px solid "+color;label.style.paddingLeft="10px";line.append(label,el("strong","",duration(sec)));stats.append(line)}const r=$("recentSessions");r.replaceChildren();for(const s of [...data.sessions].reverse().slice(0,10)){const p=data.projects.find(p=>p.id===s.projectId),ph=PHASES.find(x=>x[0]===s.phase);r.append(el("div","event",(new Date(s.start)).toLocaleDateString("ja-JP")+" · "+(p?.name||"削除した作品")+" · "+(ph?.[1]||"工程不明")+" · "+duration(s.seconds)))}if(!data.sessions.length)r.append(el("div","empty","記録はまだありません"))}
+function renderEvents(){$("eventSp").textContent=sp();const area=$("eventsList");area.replaceChildren();EVENTS.forEach(e=>{const unlocked=data.unlocks.includes(e.id),card=el("div","event"+(unlocked?"":" locked")),title=el("strong","",e.title+" · "+e.cost+" SP"),body=el("p","note",unlocked?e.body:"未解放"),btn=el("button",unlocked?"secondary compact":"primary compact",unlocked?"解放済":"解放する");btn.disabled=unlocked||sp()<e.cost;btn.onclick=()=>{if(sp()<e.cost)return;purchaseEvent(e)};card.append(title,body,btn);area.append(card)})}
+function renderRecords(){$("recordTotal").textContent=duration(total());const stats=$("phaseStats");stats.replaceChildren();for(const [id,name,color] of PHASES){const sec=sum(data.sessions.filter(s=>s.phase===id)),line=el("div","row spread");line.style.padding="10px 0";const label=el("span","",name);label.style.borderLeft="6px solid "+color;label.style.paddingLeft="10px";line.append(label,el("strong","",duration(sec)));stats.append(line)}const r=$("recentSessions");r.replaceChildren();for(const s of [...data.sessions].reverse().slice(0,10)){const p=data.projects.find(p=>p.id===s.projectId),ph=PHASES.find(x=>x[0]===s.phase);r.append(el("div","event",(new Date(s.start)).toLocaleDateString("ja-JP")+" · "+(p?.name||"削除した作品")+" · "+(ph?.[1]||"工程不明")+" · "+duration(s.seconds)))}if(!data.sessions.length)r.append(el("div","empty","記録はまだありません"));
+ $("spAccounting").textContent="時間報酬 "+earned()+" SP ／ 台帳収支 "+ledger().reduce((n,x)=>n+x.delta,0)+" SP ／ 所持 "+sp()+" SP";
+ const tx=$("spTransactions");tx.replaceChildren();
+ for(const item of [...ledger()].reverse().slice(0,20)){
+  const label=item.kind==="event"?"イベント解放："+(EVENTS.find(e=>e.id===item.ref)?.title||item.ref):item.kind==="bonus"?"ボーナス："+(item.ref||"研究成果"):"SP調整："+(item.ref||"");
+  const line=el("div","row spread");line.style.padding="8px 0";
+  line.append(el("span","",label),el("strong","",(item.delta>0?"+":"")+item.delta+" SP"));tx.append(line);
+ }
+ if(!ledger().length)tx.append(el("div","note","SPの支出・ボーナス履歴はまだありません"));
+}
 function render(){renderAssistant();const t=total();$("totalTime").textContent=duration(t);$("homeSummary").textContent="10分の研究につき1 SP · "+earned()+" SP獲得済み";const today=new Date().toLocaleDateString("sv-SE");const todaySessions=data.sessions.filter(s=>new Date(s.start).toLocaleDateString("sv-SE")===today);$("todayTime").textContent=duration(sum(todaySessions));$("activeDays").textContent=new Set(data.sessions.map(s=>new Date(s.start).toLocaleDateString("sv-SE"))).size+"日";$("spHeader").textContent="研究SP "+sp();renderGallery();renderWork();renderEvents();renderRecords()}
 document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>navigate(b.dataset.tab));$("newProject").onclick=()=>{if(running)stop();const name=prompt("作品の名前を入力","無題の研究");if(name===null)return;const p={id:uid(),name:name.trim()||"無題の研究",image:null,complete:false,created:new Date().toISOString()};data.projects.push(p);projectId=p.id;save();navigate("work")};$("backGallery").onclick=()=>{if(running)stop();navigate("home")};$("toggleTimer").onclick=()=>running?stop():start();$("completeProject").onclick=()=>{if(!project())return;project().complete=true;save();navigate("home")};$("reopenProject").onclick=()=>{if(!project())return;project().complete=false;save();render()};$("deleteProject").onclick=()=>{const p=project();if(!p||running)return;if(!confirm("作品「"+p.name+"」を削除しますか？\\n作品の画像は消えますが、制作時間は研究所に残ります。"))return;const old=data.projects;data.projects=old.filter(x=>x.id!==p.id);if(save()){const removedId=p.id;projectId=null;navigate("home");ElabV2Images.removeProject(removedId).then(refreshSnapshots).catch(e=>alert("作品は削除しましたが画像の整理が完了しませんでした: "+e.message))}else data.projects=old};$("imageInput").onchange=async e=>{const file=e.target.files?.[0],pid=projectId;e.target.value="";if(file&&pid)await addSnapshot(file,pid)};
 $("snapshotDelete").onclick=deleteSelectedSnapshot;$("snapshotOlder").onclick=()=>shiftSnapshot(1);$("snapshotNewer").onclick=()=>shiftSnapshot(-1);
@@ -248,13 +278,15 @@ $("importFile").onchange=async e=>{const file=e.target.files?.[0];if(!file)retur
  try{
    await ElabV2Images.replaceAll(imgs);
    data=next;data.activeRun=null;
+    if(data.spLedger!==undefined&&(!Array.isArray(data.spLedger)||!data.spLedger.every(ledgerValid)||new Set(data.spLedger.map(x=>x.id)).size!==data.spLedger.length))throw Error("SP台帳が不正です");
+    if(!Array.isArray(data.spLedger))data.spLedger=[...new Set(data.unlocks)].map(id=>({id:"legacy:event:"+id,kind:"event",ref:id,delta:-(legacyCost[id]??EVENTS.find(e=>e.id===id)?.cost??0),at:"legacy"}));
    if(!save())throw Error("時間データを保存できませんでした");
    clearRun();projectId=null;snapProject=null;snapIndex=0;await refreshSnapshots();navigate("home");
  }catch(err){data=old;try{await ElabV2Images.replaceAll(oldImgs)}catch(rollback){alert("画像の復元にも失敗しました。バックアップを保管して再試行してください: "+rollback.message)}throw err}
  }catch(err){alert("読み込み失敗: "+err.message)}finally{e.target.value=""}};
 
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&running){/* 開始時刻を保持。復帰時に差分を表示 */}});setInterval(()=>{if(running){const elapsed=Math.max(0,(Date.now()-running.start)/1000);viewSeconds=Math.max(0,(Date.now()-(running.sessionStart||running.start))/1000);$("timer").textContent=clock(sum(projectSessions())+elapsed);$("sessionTimer").textContent=clock(viewSeconds);if(tab==="work")renderProgress($("projectProgress"),projectSessions(),false)}},250);
-render();recoverRun();render();refreshSnapshots().then(migrateLegacyImages);window.addEventListener("resize",()=>document.documentElement.style.setProperty("--topbar-height",document.querySelector(".top").getBoundingClientRect().height+"px"));
+ensureLedger();render();recoverRun();render();refreshSnapshots().then(migrateLegacyImages);window.addEventListener("resize",()=>document.documentElement.style.setProperty("--topbar-height",document.querySelector(".top").getBoundingClientRect().height+"px"));
 
 // GitHub Pages offline shell. Research data is already stored locally.
 async function prepareOffline(){
