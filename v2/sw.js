@@ -1,6 +1,6 @@
 /* E-lab V2 offline shell. Only public app assets are cached; research data stays in localStorage/IndexedDB. */
 "use strict";
-const CACHE="elab-v2-shell-2026-11-09-dialogue-01";
+const CACHE="elab-v2-shell-2026-11-09-layout-01";
 const SHELL=[
  "./","./index.html","./images.js",
  "./assets/assistants/kokoro-full.png",
