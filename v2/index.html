@@ -297,7 +297,7 @@ async function prepareOffline(){
  try{
   const registration=await navigator.serviceWorker.register("./sw.js",{scope:"./"});
   await navigator.serviceWorker.ready;
-  const cache=await caches.open("elab-v2-shell-2026-11-09-sports-01");
+  const cache=await caches.open("elab-v2-shell-2026-11-09-ledger-01");
   const paths=["./","./index.html","./images.js",...ASSIST.map(a=>a[3])];
   const entries=await Promise.all(paths.map(p=>cache.match(new URL(p,document.baseURI).href)));
   if(entries.every(Boolean)){status.className="offline-status ready";status.textContent=navigator.onLine?"✓ オフライン利用の準備完了":"✓ オフラインで利用中"}
