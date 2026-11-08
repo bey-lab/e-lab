@@ -34,9 +34,9 @@ body.work-mode{height:100dvh;overflow:hidden}
 "use strict";
 const KEY="elab-v2-2026",RUN_KEY="elab-v2-active-run",PHASES=[["play","研究","#a898da","実験・模写・観察・練習。迷った時間も研究の一部。"],["rough","ラフ","#efb859","大きなシルエットや構図を決めよう。"],["line","線画","#79a7e4","線の強弱や形の説得力を意識しよう。"],["base","下塗り","#6cc4bd","色分けやベースの色を決めよう。"],["shadow","陰影","#8b92dc","影・光・立体を意識して描こう。"],["finish","仕上げ","#e59ab7","絵全体の視線誘導や仕上がりを確認しよう。"]];
 const ASSIST=[
- ["ココロ","🌱","所長すごい！ 今日も研究するんだね！","./assets/assistants/kokoro-full.png","感性研究員"],
- ["リツ","📘","ま、まあ……続けるのは悪くないと思います。","./assets/assistants/ritsu-full.png","分析研究員"],
- ["マユミ","💜","所長さん、今日もえらいえらい♡","./assets/assistants/mayumi-full.png","美術史研究員"]
+ ["ココロ","🌱","おかえり、所長。ねえ、今日はどんな気持ちで描く？","./assets/assistants/kokoro-full.png","感性研究員"],
+ ["リツ","📘","……所長、今日は何を調べます？ 分からないなら、一緒に確かめましょう。","./assets/assistants/ritsu-full.png","分析研究員"],
+ ["マユミ","💜","おかえりなさい、所長さん。今日はどんな絵の旅をしましょうか？","./assets/assistants/mayumi-full.png","美術史研究員"]
 ];
 const fresh=()=>({version:2,projects:[],sessions:[],activeRun:null,unlocks:[],spLedger:[],assistant:2});
 let snapshots=[],snapProject=null,snapIndex=0,imageLoading=false;
@@ -72,7 +72,7 @@ function purchaseEvent(e){
  render();
 }
 const project=()=>data.projects.find(x=>x.id===projectId),projectSessions=()=>data.sessions.filter(s=>s.projectId===projectId);
-const EVENTS=[{id:"k1",who:0,cost:1,title:"ココロ：好きなものを描こう",body:"所長の好きなもの、私にも教えて！"},{id:"r1",who:1,cost:2,title:"リツ：小さな技術メモ",body:"全体を縮小表示して構図を確認すると、違和感を見つけやすいです。"},{id:"m1",who:2,cost:3,title:"マユミ：研究所の休憩時間",body:"少しだけでも描いたんですね。よく頑張りました♡"}];
+const EVENTS=[{id:"k1",who:0,cost:1,title:"ココロ：描いた時間って、なんだろう",body:"ねえ所長。描いた絵を消しても、描いてた時間は残るんだよね。……その時間って、どこに行くんだろう。私、まだよく分からない。所長はどう思う？"},{id:"r1",who:1,cost:2,title:"リツ：縮小表示の研究",body:"……所長。そんなことも知らずに研究しているんですか。画面を縮小すると、細部ではなく全体の配置や視線の流れを確認しやすくなるんです。……分からない？ では、同じ絵を大小二つの表示で比べましょう。理解できるまで付き合いますから。"},{id:"m1",who:2,cost:3,title:"マユミ：美術史紀行のはじまり",body:"所長さん、絵の歴史を一緒に旅してみませんか？ たとえばカラヴァッジョの絵では、光が人物だけでなく物語まで浮かび上がらせます。ふふ、昔の画家さんたちの工夫、今の私たちの絵にもつながっているんですよ。"}];
 // Keep active session and completed records in ONE localStorage transaction.
 // This prevents a phase change from recording one side without the other.
 function commitRun(nextRun,entry){
@@ -297,7 +297,7 @@ async function prepareOffline(){
  try{
   const registration=await navigator.serviceWorker.register("./sw.js",{scope:"./"});
   await navigator.serviceWorker.ready;
-  const cache=await caches.open("elab-v2-shell-2026-11-09-ledger-01");
+  const cache=await caches.open("elab-v2-shell-2026-11-09-dialogue-01");
   const paths=["./","./index.html","./images.js",...ASSIST.map(a=>a[3])];
   const entries=await Promise.all(paths.map(p=>cache.match(new URL(p,document.baseURI).href)));
   if(entries.every(Boolean)){status.className="offline-status ready";status.textContent=navigator.onLine?"✓ オフライン利用の準備完了":"✓ オフラインで利用中"}
