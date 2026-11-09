@@ -31,7 +31,7 @@ body{height:100dvh;overflow:hidden}
 <script src="./images.js"></script>
 <script>
 "use strict";
-const KEY="elab-v2-2026",RUN_KEY="elab-v2-active-run",PHASES=[["play","研究","#a898da","実験・模写・観察・練習。迷った時間も研究の一部。"],["rough","ラフ","#efb859","大きなシルエットや構図を決めよう。"],["line","線画","#79a7e4","線の強弱や形の説得力を意識しよう。"],["base","下塗り","#6cc4bd","色分けやベースの色を決めよう。"],["shadow","陰影","#8b92dc","影・光・立体を意識して描こう。"],["finish","仕上げ","#e59ab7","絵全体の視線誘導や仕上がりを確認しよう。"]];
+const KEY="elab-v2-2026",RUN_KEY="elab-v2-active-run",PHASES=[["play","研究","#a898da","実験・模写・観察・練習。迷った時間も研究の一部。"],["rough","ラフ","#efb859","大きなシルエットや構図を決めよう。"],["line","線画","#79a7e4","線の強弱や形の説得力を意識しよう。"],["base","色面","#6cc4bd","色分けやベースの色を決めよう。"],["shadow","陰影","#8b92dc","影・光・立体を意識して描こう。"],["finish","仕上げ","#e59ab7","絵全体の視線誘導や仕上がりを確認しよう。"]];
 const ASSIST=[
  ["ココロ","🌱","あっ！ 所長！ おかえりなさい！ 今日も観察から始めましょう！","./assets/assistants/kokoro-full.png","感性研究員"],
  ["リツ","📘","……所長、今日は何を調べます？ 分からないなら、一緒に確かめましょう。","./assets/assistants/ritsu-full.png","分析研究員"],
@@ -326,7 +326,7 @@ async function prepareOffline(){
  try{
   const registration=await navigator.serviceWorker.register("./sw.js",{scope:"./"});
   await navigator.serviceWorker.ready;
-  const cache=await caches.open("elab-v2-shell-2026-11-09-kokoro-home-3");
+  const cache=await caches.open("elab-v2-shell-2026-11-10-color-plane");
   const paths=["./","./index.html","./images.js",...ASSIST.map(a=>a[3])];
   const entries=await Promise.all(paths.map(p=>cache.match(new URL(p,document.baseURI).href)));
   if(entries.every(Boolean)){status.className="offline-status ready";status.textContent=navigator.onLine?"✓ オフライン利用の準備完了":"✓ オフラインで利用中"}
