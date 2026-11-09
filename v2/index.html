@@ -33,7 +33,7 @@ body{height:100dvh;overflow:hidden}
 "use strict";
 const KEY="elab-v2-2026",RUN_KEY="elab-v2-active-run",PHASES=[["play","研究","#a898da","実験・模写・観察・練習。迷った時間も研究の一部。"],["rough","ラフ","#efb859","大きなシルエットや構図を決めよう。"],["line","線画","#79a7e4","線の強弱や形の説得力を意識しよう。"],["base","下塗り","#6cc4bd","色分けやベースの色を決めよう。"],["shadow","陰影","#8b92dc","影・光・立体を意識して描こう。"],["finish","仕上げ","#e59ab7","絵全体の視線誘導や仕上がりを確認しよう。"]];
 const ASSIST=[
- ["ココロ","🌱","所長！ 見てください！ 今日、線画がすっごく上手くいったんです！","./assets/assistants/kokoro-full.png","感性研究員"],
+ ["ココロ","🌱","あっ！ 所長！ おかえりなさい！ 今日も観察から始めましょう！","./assets/assistants/kokoro-full.png","感性研究員"],
  ["リツ","📘","……所長、今日は何を調べます？ 分からないなら、一緒に確かめましょう。","./assets/assistants/ritsu-full.png","分析研究員"],
  ["マユミ","💜","所長さん、今日もえらいえらい♡ ふふ、よしよししてあげましょうね。","./assets/assistants/mayumi-full.png","美術史研究員"]
 ];
@@ -144,7 +144,7 @@ assistantImages.forEach((img,i)=>{
 // Dialogue is display-only. No page visits or dialogue rotations are written to research data.
 const DIALOGUES={
  home:[
-  ["所長！ 見てください！ 今日、線画がすっごく上手くいったんです！","うーん、この色じゃないんだよなぁ……あっ！ 所長！ いつからいたんですか！？","えへへ、昨日描いてた子の続き、やってるんです。早く完成させたいなぁ。","所長、おかえりなさい！ 私もちょうど描き始めるところです！","リツに色の相談をしたら、難しい話が始まっちゃって……でも、ちょっと分かってきました！","描きたいものがいっぱいあって……あっ、また新しいの思いついちゃった！","今日はなんだか調子がいいんです。所長も一緒に描きませんか？"],
+  ["……何かを熱心に観察している。こちらには気づいていないようだ。そっとしておこう。","あっ！ 所長！ おかえりなさい！ 今日も観察から始めましょう！","……あ、所長。同じものでも、よく見ると全然違うんですね。なんだか面白いです"],
   ["……所長、今日は何を調べます？ 分からないなら、一緒に確かめましょう。","新しい仮説を思いついたんです。……聞きますか？","積み上げた記録は残っています。次は、そこから何を学ぶかですね。","……また来たんですね。ちょうど、話したい技術があったところです。"],
   ["おかえりなさい、所長さん。今日も来てくれたんですね。えらいえらい♡","ふふ、頑張ってるね♡ 所長さんのそういうところ、ちゃんと見ていますよ。","今日はちょっと甘えてもいいんですよ。よしよし、いつもお疲れさまです♡","所長さん、今日はどんな絵の旅をしましょうか？ 私とゆっくり巡りましょうね。","描きたい日も、眺めるだけの日も。所長さんのペースでいいんですよ♡","あら、また会えましたね。ふふ、いい子いい子♡"]
  ],
@@ -326,7 +326,7 @@ async function prepareOffline(){
  try{
   const registration=await navigator.serviceWorker.register("./sw.js",{scope:"./"});
   await navigator.serviceWorker.ready;
-  const cache=await caches.open("elab-v2-shell-2026-11-09-kokoro-01");
+  const cache=await caches.open("elab-v2-shell-2026-11-09-kokoro-home-3");
   const paths=["./","./index.html","./images.js",...ASSIST.map(a=>a[3])];
   const entries=await Promise.all(paths.map(p=>cache.match(new URL(p,document.baseURI).href)));
   if(entries.every(Boolean)){status.className="offline-status ready";status.textContent=navigator.onLine?"✓ オフライン利用の準備完了":"✓ オフラインで利用中"}
