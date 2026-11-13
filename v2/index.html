@@ -139,7 +139,7 @@ function showMilestone(level,p){
 function renderMilestone(){
  const p=project(),star=$("milestoneStar"),area=$("milestoneProgress");
  if(!p){star.disabled=true;star.textContent="☆ 星を目指そう";star.className="milestone-star";area.replaceChildren();return}
- const seconds=projectLiveSeconds(p.id),level=milestoneLevel(seconds);
+ const seconds=projectLiveSeconds(p.id),level=milestoneLevel(projectSavedSeconds(p.id));
  star.disabled=level===0;star.className="milestone-star"+(level===10?" gold":level===5?" silver":"");
  star.textContent=level===10?"★ 金星・10時間達成":level===5?"★ 銀星・5時間達成":"☆ 5時間で銀星";
  star.title=level?"タップして達成コメントを読み返す":"5時間で銀星、10時間で金星";
@@ -431,7 +431,8 @@ $("importFile").onchange=async e=>{const file=e.target.files?.[0];if(!file)retur
  }catch(err){data=old;try{await ElabV2Images.replaceAll(oldImgs)}catch(rollback){alert("画像の復元にも失敗しました。バックアップを保管して再試行してください: "+rollback.message)}throw err}
  }catch(err){alert("読み込み失敗: "+err.message)}finally{e.target.value=""}};
 
-document.addEventListener("visibilitychange",()=>{if(document.hidden&&running){/* 開始時刻を保持。復帰時に差分を表示 */}});setInterval(()=>{if(running){const elapsed=Math.max(0,(Date.now()-running.start)/1000);viewSeconds=Math.max(0,(Date.now()-(running.sessionStart||running.start))/1000);$("timer").textContent=clock(sum(projectSessions())+elapsed);$("sessionTimer").textContent=clock(viewSeconds);if(tab==="work")renderMilestone();if(tab==="work")renderProgress($("projectProgress"),projectSessions(),false)}},250);
+let lastMilestonePaint=0;
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&running){/* 開始時刻を保持。復帰時に差分を表示 */}});setInterval(()=>{if(running){const elapsed=Math.max(0,(Date.now()-running.start)/1000);viewSeconds=Math.max(0,(Date.now()-(running.sessionStart||running.start))/1000);$("timer").textContent=clock(sum(projectSessions())+elapsed);$("sessionTimer").textContent=clock(viewSeconds);if(tab==="work"&&Date.now()-lastMilestonePaint>4000){lastMilestonePaint=Date.now();renderMilestone()}if(tab==="work")renderProgress($("projectProgress"),projectSessions(),false)}},250);
 ensureLedger();render();recoverRun();render();refreshSnapshots().then(migrateLegacyImages);window.addEventListener("resize",()=>document.documentElement.style.setProperty("--topbar-height",document.querySelector(".top").getBoundingClientRect().height+"px"));
 
 // GitHub Pages offline shell. Research data is already stored locally.
