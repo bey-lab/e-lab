@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#fff9ec"><title>E-lab V2 | 復元試験専用</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN",sans-serif;color:#29334e;background:#fff9ec}*{box-sizing:border-box}body{margin:0}button,input{font:inherit}button{cursor:pointer;border:0;border-radius:14px;font-weight:750;color:inherit}button:focus-visible,input:focus-visible{outline:3px solid #8e76d9;outline-offset:2px}.top{position:sticky;top:0;background:#ffffffec;backdrop-filter:blur(12px);z-index:2;display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:13px max(18px,calc((100% - 1220px)/2));border-bottom:1px solid #e9e5dc}.brand{font-size:22px;font-weight:900;margin-right:auto}.nav{padding:12px 17px;background:#eef0f6}.nav.active,.primary{background:#ffcb55;color:#423018}.main{max-width:1220px;margin:auto;padding:27px 18px 70px}.banner{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}.banner h1{margin:0;font-size:26px}.sub{color:#788092;font-size:14px}.layout{display:grid;grid-template-columns:minmax(250px,.78fr) minmax(0,1.4fr);gap:18px;align-items:start}.panel{background:white;border-radius:24px;padding:24px;box-shadow:0 8px 28px #33415c0d}.assistant-panel{background:linear-gradient(155deg,#f4e9f4,#fff);height:clamp(450px,calc(100dvh - 220px),780px);min-height:450px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}.avatar{display:grid;place-items:center;flex:1;min-height:0;font-size:110px;line-height:1;width:100%;contain:layout;overflow:hidden}.assist-buttons{display:flex;gap:7px}.assist-buttons button{background:#fff;flex:1;padding:11px 3px}.assist-buttons button.selected{outline:2px solid #b77bba}.bubble{border:2px solid #c492c6;border-radius:16px;padding:16px;margin-top:15px;background:#fff;font-weight:750;line-height:1.8}.stat{background:linear-gradient(120deg,#293550,#526487);border-radius:19px;color:white;padding:22px;margin:18px 0}.stat b{font-size:39px;display:block}.stat small{color:#d9e3f6}.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.smallstat,.tile{border-radius:14px;background:#f3f5f9;padding:15px}.smallstat strong{font-size:23px;display:block}.primary{width:100%;padding:16px;margin-top:14px;font-size:16px}.secondary{padding:13px;background:#edf0f5}.danger{background:#ffe9e6;color:#a13a34}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.spread{justify-content:space-between}.tabs{display:flex;gap:8px;margin-bottom:20px}.tabs>span{flex:1;border-radius:12px;padding:15px;background:#e8ecf3;text-align:center;font-weight:800}.tabs>.current{background:#ffcb55}.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:13px}.art{background:#f2f3f8;border:2px solid transparent;border-radius:17px;overflow:hidden;text-align:left;padding:0}.art.selected{border-color:#f0b633}.art img,.new-art{width:100%;aspect-ratio:4/3;object-fit:cover;display:grid;place-items:center;font-size:45px;background:#f8f0df}.art-text{padding:12px}.art-text small{color:#777;display:block;margin-top:5px}.hidden{display:none!important}h2{margin:0 0 12px}h3{margin:20px 0 9px}.phases{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.phase{padding:13px 5px;background:#eef0f6}.phase.active{outline:3px solid #ffcb55}.clock{text-align:center;background:#eff4fd;border-radius:18px;padding:25px;margin:16px 0}.clock strong{font-size:clamp(36px,5vw,64px);font-variant-numeric:tabular-nums;letter-spacing:2px;display:block}.progress{display:flex;height:17px;border-radius:20px;overflow:hidden;background:#e9eaf0;margin:15px 0}.progress>span{min-width:0;transition:flex-basis .35s linear}.phase-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 14px;margin:14px 0 8px}.phase-summary-item{min-width:0;display:flex;align-items:flex-start;gap:8px}.phase-summary-dot{width:9px;height:9px;border-radius:50%;flex:none;margin-top:5px}.phase-summary-label{font-size:12px;color:#788092}.phase-summary-value{font-size:15px;font-variant-numeric:tabular-nums;font-weight:750;white-space:nowrap}.phase-summary-data{min-width:0}@media(max-width:430px){.phase-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}.muted{color:#7d8494}.work-image{width:100%;max-height:250px;object-fit:contain;background:#f5f5fa;border-radius:13px}.file{display:inline-block;background:#eef0f6;padding:11px 14px;border-radius:12px;cursor:pointer;font-weight:700}.file input{display:none}.compact{padding:9px 13px}#notice{margin:10px 0;color:#725b31;min-height:20px}.empty{padding:22px;color:#737b89;text-align:center;background:#f7f8fa;border-radius:14px}.pill{background:#eef0f6;border-radius:9px;padding:8px 12px}input[type=text]{padding:12px;border-radius:10px;border:1px solid #cfd3df;max-width:100%}.section{display:none}.section.visible{display:block}.note{font-size:13px;color:#68738a;line-height:1.7}.event{padding:13px;background:#f3f5f9;border-radius:12px;margin:9px 0}.event.locked{opacity:.62}/* Only the production workspace has independent scroll.
+   The left assistant never follows the right content's height. */
+body.work-mode{height:100dvh;overflow:hidden}
+.main.work-mode{height:calc(100dvh - var(--topbar-height,72px));padding-bottom:16px;display:flex;flex-direction:column;overflow:hidden}
+.main.work-mode .banner{flex:0 0 auto}
+.main.work-mode .layout{flex:1;min-height:0;align-items:stretch}
+.main.work-mode .assistant-panel{height:100%;min-height:0;align-self:stretch;flex-shrink:0}
+.main.work-mode #contentPanel{min-height:0;max-height:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-gutter:stable}
+@media(max-width:760px){body.work-mode{height:auto;overflow:auto}.main.work-mode{height:auto;display:block;overflow:visible;padding-bottom:70px}.main.work-mode .layout{display:grid}.main.work-mode .assistant-panel{height:300px;min-height:300px}.main.work-mode #contentPanel{max-height:none;overflow:visible}.layout{grid-template-columns:1fr}.assistant-panel{height:300px;min-height:300px}.avatar{font-size:64px}.panel{padding:17px}.top{gap:6px}.nav{padding:9px}.phases{grid-template-columns:repeat(2,1fr)}}
+.snapshot-stage{position:relative;max-width:100%;touch-action:pan-y;user-select:none}.snapshot-stage img{max-height:360px;object-fit:contain}.snapshot-strip{display:flex;gap:9px;overflow-x:auto;padding:9px 0;scroll-snap-type:x mandatory}.snapshot-thumb{flex:0 0 86px;border:2px solid transparent;background:#f2f3f8;border-radius:12px;padding:3px;scroll-snap-align:start}.snapshot-thumb.selected{border-color:#e9ae35}.snapshot-thumb img{width:100%;height:68px;object-fit:cover;border-radius:8px}.snapshot-thumb small{font-size:10px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.snapshot-actions{display:flex;gap:9px;align-items:center;justify-content:center;margin:9px 0}.snapshot-actions button{padding:8px 14px;background:#edf0f5}.snapshot-actions button:disabled{opacity:.35}.snapshot-status{text-align:center;font-size:12px;color:#68758c}.gallery{display:flex;overflow-x:auto;gap:13px;scroll-snap-type:x mandatory;padding-bottom:6px}.gallery>.art{flex:0 0 clamp(145px,25%,220px);scroll-snap-align:start}
+</style></head><body>
+<div style="background:#ffe7af;color:#62420a;padding:10px 20px;text-align:center;font-weight:800;border-bottom:2px solid #c58a26">🧪 復元試験専用｜本番とは別の時間・画像保管庫を使用</div>
+<header class="top"><div class="brand">🎨 E-lab <small style="font-size:11px;color:#9399a4">V2</small></div><button class="nav active" data-tab="home">⌂ ホーム</button><button class="nav" data-tab="work">✎ 制作</button><button class="nav" data-tab="events">♡ イベント</button><button class="nav" data-tab="records">▥ 記録</button></header>
+<main class="main" id="appMain"><div class="banner"><div><h1 id="pageTitle">研究所へようこそ！</h1><div class="sub">描いた時間は、裏切らない。</div></div><span class="pill" id="spHeader">研究SP 0</span></div>
+<div class="layout"><aside class="panel assistant-panel"><div class="avatar" aria-hidden="true" id="avatar">💜</div><div><div class="assist-buttons" id="assistButtons"></div><div class="bubble" id="bubble">今日も研究を続けましょうね♡</div></div></aside>
+<div class="panel" id="contentPanel"><section id="home" class="section visible"><h2>今日も一歩、積み重ねよう。</h2><div class="stat"><small>✦ 総プレイ時間</small><b id="totalTime">0時間 0分</b><small id="homeSummary">研究はここから始まる。</small></div><div class="stats"><div class="smallstat"><small>今日の制作</small><strong id="todayTime">0分</strong></div><div class="smallstat"><small>研究した日数</small><strong id="activeDays">0日</strong></div></div><h3>作品を選ぶ</h3><div class="gallery" id="gallery"></div><button class="primary" id="newProject">＋ 新しい作品を始める</button><p class="note">制作を途中でやめた作品も、費やした時間は研究所に残ります。</p></section>
+<section id="work" class="section"><p class="note" style="margin:0 0 14px">🎨 制作ワークスペース · 工程を選んで時間を積み上げよう</p><h2 id="workTitle">制作する作品を選ぼう</h2><div id="snapshotStage" class="snapshot-stage"><img id="workImage" class="work-image hidden" alt="制作中の作品"></div><div id="workNoImage" class="empty">画像なしでも制作時間を記録できます</div><div class="snapshot-actions"><button type="button" id="snapshotNewer" aria-label="新しい画像へ">← 新しい</button><span id="snapshotPosition" class="snapshot-status">画像なし</span><button type="button" id="snapshotOlder" aria-label="古い画像へ">古い →</button></div><div id="snapshotStrip" class="snapshot-strip" aria-label="制作過程の画像履歴"></div><div class="snapshot-actions"><button type="button" id="snapshotDelete" class="secondary danger" disabled>選択中の画像を削除</button></div><p id="snapshotNote" class="snapshot-status">新しい画像が左。右へスワイプすると最新に戻ります。</p><div class="row" style="margin:12px 0"><label class="file">画像を登録・更新<input id="imageInput" type="file" accept="image/*"></label><button class="secondary compact" id="backGallery">別の作品を選ぶ</button></div><h3>工程を選ぶ</h3><div class="phases" id="phases"></div><p class="note" id="guide"></p><div class="clock"><span>⏱ この作品の累計制作時間</span><strong id="timer">00:00:00</strong><div class="sub" id="timerStatus">停止中・保存済み</div><div class="sub" style="margin-top:7px">今回の制作：<strong id="sessionTimer" style="font-size:16px">00:00:00</strong></div><button class="primary" id="toggleTimer">▶ スタート</button><p class="note" style="margin:9px 0 0">停止すると制作時間が自動保存されます。</p></div><h3>この作品の工程別時間</h3><div class="progress" id="projectProgress"></div><div class="phase-summary" id="projectBreakdown" aria-label="工程別の保存済み時間"></div><p class="note" id="progressHint">数字は保存時に更新。バーは計測中も成長します。</p><div class="row" style="margin-top:18px"><button class="secondary" id="completeProject">作品を完成にする</button><button class="secondary" id="reopenProject">制作中に戻す</button><button class="secondary danger" id="deleteProject">作品を削除</button></div><div id="notice" role="status"></div></section>
+<section id="events" class="section"><h2>助手との研究イベント</h2><p class="note">SPは制作時間で獲得。今は小さなイベントツリーの試作です。</p><div class="stat"><small>現在の研究SP</small><b id="eventSp">0</b></div><div id="eventsList"></div></section>
+<section id="records" class="section"><h2>研究記録</h2><div class="stat"><small>全作品・全工程の累積時間</small><b id="recordTotal">0時間 0分</b></div><h3>工程別の累積時間</h3><div id="phaseStats"></div><h3>最近の研究</h3><div id="recentSessions"></div><h3>復元テストの合格条件</h3><div id="restoreAudit" class="event">バックアップ復元後、ここに検査結果を表示します。</div><h3>バックアップ</h3><div class="row"><button class="secondary" id="export">完全バックアップJSONを保存</button><label class="file">バックアップJSONを復元<input type="file" id="importFile" accept=".json,application/json"></label></div><p class="note">🧪 復元テスト専用。ここの操作は本番V2の記録には影響しません。画像は別の保存領域で管理し、完全バックアップJSONにまとめます。書き出し後はiPadの「ファイル」への保存を確認してください。</p></section></div></div></main>
+<script src="./images.js"></script>
+<script>
+"use strict";
+const KEY="elab-v2-sandbox-20261108",RUN_KEY="elab-v2-sandbox-active-run",PHASES=[["play","研究","#a898da","実験・模写・観察・練習。迷った時間も研究の一部。"],["rough","ラフ","#efb859","大きなシルエットや構図を決めよう。"],["line","線画","#79a7e4","線の強弱や形の説得力を意識しよう。"],["base","下塗り","#6cc4bd","色分けやベースの色を決めよう。"],["shadow","陰影","#8b92dc","影・光・立体を意識して描こう。"],["finish","仕上げ","#e59ab7","絵全体の視線誘導や仕上がりを確認しよう。"]];
+const ASSIST=[["ココロ","🌱","所長すごい！ 今日も研究するんだね！"],["リツ","📘","ま、まあ……続けるのは悪くないと思います。"],["マユミ","💜","所長さん、今日もえらいえらい♡"]];
+const fresh=()=>({version:2,projects:[],sessions:[],activeRun:null,unlocks:[],assistant:2});
+let snapshots=[],snapProject=null,snapIndex=0,imageLoading=false;
+let data;try{data=JSON.parse(localStorage.getItem(KEY))}catch{}if(!data||data.version!==2||!Array.isArray(data.projects)||!Array.isArray(data.sessions))data=fresh();data.unlocks??=[];let tab="home",projectId=null,phase="play",running=null,viewSeconds=0;
+const $=id=>document.getElementById(id),save=()=>{try{localStorage.setItem(KEY,JSON.stringify(data));return true}catch(e){alert("保存に失敗しました。容量不足の可能性があります。バックアップを確認してください。");return false}};
+const uid=()=>globalThis.crypto?.randomUUID?.()||String(Date.now())+Math.random();
+const readRun=()=>{try{return JSON.parse(localStorage.getItem(RUN_KEY))}catch{return null}};
+const writeRun=run=>{try{localStorage.setItem(RUN_KEY,JSON.stringify(run));return true}catch{alert("開始状態を保存できません。タイマーを起動しません。");return false}};
+const clearRun=()=>{try{localStorage.removeItem(RUN_KEY)}catch{}};
+const isSession=s=>s&&typeof s.id==="string"&&typeof s.projectId==="string"&&PHASES.some(p=>p[0]===s.phase)&&typeof s.seconds==="number"&&Number.isFinite(s.seconds)&&s.seconds>=0&&s.seconds<=86400*14&&typeof s.start==="string";
+const seconds=s=>Math.max(0,Math.floor(s)),duration=s=>{s=seconds(s);return Math.floor(s/3600)+"時間 "+Math.floor(s%3600/60)+"分"},clock=s=>{s=seconds(s);return [Math.floor(s/3600),Math.floor(s%3600/60),s%60].map(x=>String(x).padStart(2,"0")).join(":")};
+const sessionSeconds=s=>Math.max(0,Number(s.seconds)||0),sum=sessions=>sessions.reduce((n,s)=>n+sessionSeconds(s),0);
+const total=()=>sum(data.sessions),earned=()=>Math.floor(total()/600),spent=()=>data.unlocks.reduce((n,id)=>n+(EVENTS.find(e=>e.id===id)?.cost||0),0),sp=()=>Math.max(0,earned()-spent());
+const project=()=>data.projects.find(x=>x.id===projectId),projectSessions=()=>data.sessions.filter(s=>s.projectId===projectId);
+const EVENTS=[{id:"k1",who:0,cost:1,title:"ココロ：好きなものを描こう",body:"所長の好きなもの、私にも教えて！"},{id:"r1",who:1,cost:2,title:"リツ：小さな技術メモ",body:"全体を縮小表示して構図を確認すると、違和感を見つけやすいです。"},{id:"m1",who:2,cost:3,title:"マユミ：研究所の休憩時間",body:"少しだけでも描いたんですね。よく頑張りました♡"}];
+// Keep active session and completed records in ONE localStorage transaction.
+// This prevents a phase change from recording one side without the other.
+function commitRun(nextRun,entry){
+  const beforeSessions=data.sessions,beforeRun=data.activeRun;
+  if(entry&&!data.sessions.some(x=>x.id===entry.id))data.sessions=[...data.sessions,entry];
+  data.activeRun=nextRun;
+  if(!save()){data.sessions=beforeSessions;data.activeRun=beforeRun;return false}
+  running=nextRun;return true;
+}
+function makeEntry(run,now){
+  const elapsed=Math.max(0,now-run.start)/1000;
+  return elapsed>0?{id:run.id,projectId:run.projectId,phase:run.phase,start:new Date(run.start).toISOString(),end:new Date(now).toISOString(),seconds:elapsed}:null;
+}
+function stop(){
+  if(!running)return;
+  if(!commitRun(null,makeEntry(running,Date.now()))){
+    alert("記録を保存できません。時計は動かしたままです。");return;
+  }
+  clearRun();viewSeconds=0;render();
+}
+function start(){
+  if(!project()){alert("先に作品を選んでください");return}
+  if(running)return;
+  const now=Date.now(),next={id:uid(),start:now,sessionStart:now,projectId,phase};
+  if(!commitRun(next,null)){alert("開始情報を保存できません。タイマーは開始しません。");return}
+  clearRun();viewSeconds=0;render();
+}
+function recoverRun(){
+  // One-time migration from the earlier two-key prototype.
+  const legacy=readRun();
+  if(!data.activeRun&&legacy&&!data.sessions.some(x=>x.id===legacy.id)){
+    data.activeRun=legacy;
+    if(!save()){data.activeRun=null;alert("以前の計測情報を保存できません。");return}
+  }
+  if(legacy&&(!data.activeRun||data.activeRun.id===legacy.id))clearRun();
+  const pending=data.activeRun;
+  if(!pending)return;
+  const valid=Number.isFinite(pending.start)&&pending.start>0&&pending.start<=Date.now()&&typeof pending.id==="string"&&typeof pending.projectId==="string"&&PHASES.some(p=>p[0]===pending.phase);
+  if(!valid){alert("不正な計測情報を検出しました。記録を変更せずに停止します。");return}
+  const elapsed=(Date.now()-pending.start)/1000;
+  const choice=confirm("前回の計測が終了していません。\\n最後の工程で "+clock(elapsed)+" 経過しています。\\n\\nOK：この時間を記録して終了\\nキャンセル：記録せずに終了");
+  if(!commitRun(null,choice?makeEntry(pending,Date.now()):null)){
+    alert("復元の保存に失敗しました。再読み込み後にやり直せます。");return;
+  }
+  clearRun();viewSeconds=0;
+}
+function selectPhase(id){
+  if(id===phase)return;
+  if(running){
+    const now=Date.now();
+    const next={id:uid(),start:now,sessionStart:running.sessionStart||running.start,projectId:running.projectId,phase:id};
+    if(!commitRun(next,makeEntry(running,now))){
+      alert("工程変更の保存に失敗。前の工程で計測を継続しています。");return;
+    }
+    clearRun();viewSeconds=(now-next.sessionStart)/1000;
+  }
+  phase=id;render();
+}
+function navigate(page){const previous=tab;tab=page;document.body.classList.toggle("work-mode",page==="work");$("appMain").classList.toggle("work-mode",page==="work");document.documentElement.style.setProperty("--topbar-height",document.querySelector(".top").getBoundingClientRect().height+"px");if(previous!==page&&page==="work")$("contentPanel").scrollTop=0;document.querySelectorAll(".section").forEach(s=>s.classList.toggle("visible",s.id===page));document.querySelectorAll(".nav").forEach(b=>b.classList.toggle("active",b.dataset.tab===page));$("pageTitle").textContent=({home:"研究所へようこそ！",work:"今日の制作",events:"イベントツリー",records:"研究の記録"})[page];render()}
+function safeText(el,value){el.textContent=value}
+function el(tag,cls,textValue){const node=document.createElement(tag);if(cls)node.className=cls;if(textValue!==undefined)node.textContent=textValue;return node}
+let displayedAssistant=null;function renderAssistant(){if(displayedAssistant===data.assistant)return;displayedAssistant=data.assistant;const wrap=$("assistButtons");wrap.replaceChildren();ASSIST.forEach((a,i)=>{const b=el("button",data.assistant===i?"selected":"",a[1]+" "+a[0]);b.onclick=()=>{data.assistant=i;save();renderAssistant()};wrap.append(b)});$("avatar").textContent=ASSIST[data.assistant]?.[1]||"💜";$("bubble").textContent=ASSIST[data.assistant]?.[2]||ASSIST[2][2]}
+function renderGallery(){const g=$("gallery");g.replaceChildren();for(const p of [...data.projects].reverse()){const b=el("button","art"+(p.id===projectId?" selected":""));{const latest=snapshots.find(x=>x.projectId===p.id);if(latest){const img=el("img");const u=URL.createObjectURL(latest.blob);img.src=u;img.onload=()=>URL.revokeObjectURL(u);img.alt=p.name;b.append(img)}else if(p.image){const img=el("img");img.src=p.image;img.alt=p.name;b.append(img)}else b.append(el("div","new-art","🎨"))}const t=el("div","art-text");t.append(el("strong","",p.name),el("small","",(p.complete?"完成済 · ":"制作中 · ")+duration(sum(data.sessions.filter(s=>s.projectId===p.id)))));b.append(t);b.onclick=()=>{if(running)stop();projectId=p.id;navigate("work")};g.append(b)}if(!data.projects.length)g.append(el("div","empty","最初の作品を登録しよう！"))}
+function renderPhases(){const area=$("phases");area.replaceChildren();PHASES.forEach(([id,name,color])=>{const b=el("button","phase"+(phase===id?" active":""),name);b.style.borderLeft="6px solid "+color;b.onclick=()=>selectPhase(id);area.append(b)});$("guide").textContent=PHASES.find(x=>x[0]===phase)?.[3]||""}
+function renderProgress(area,sessions,refreshNumbers=true){
+  // Live bar reads the uncommitted run; the six-number grid shows saved time only.
+  // Avoid rebuilding DOM on each timer tick, so the display stays visually calm.
+  if(area.children.length!==PHASES.length){
+    area.replaceChildren();
+    for(const [id,name,color] of PHASES){
+      const bar=el("span");bar.dataset.phase=id;bar.style.background=color;bar.style.flex="0 0 0%";bar.title=name;area.append(bar);
+    }
+  }
+  const active=running&&running.projectId===projectId;
+  const pending=active?Math.max(0,(Date.now()-running.start)/1000):0;
+  const saved=sum(sessions),all=saved+pending;
+  for(const bar of area.children){
+    const id=bar.dataset.phase;
+    const phaseSeconds=sum(sessions.filter(x=>x.phase===id))+(active&&running.phase===id?pending:0);
+    bar.style.flexBasis=all>0?((phaseSeconds/all)*100)+"%":"0%";
+    bar.title=PHASES.find(x=>x[0]===id)[1]+" "+clock(phaseSeconds);
+  }
+  const grid=$("projectBreakdown");
+  if(grid.children.length!==PHASES.length){
+    grid.replaceChildren();
+    for(const [id,name,color] of PHASES){
+      const cell=el("div","phase-summary-item");
+      const dot=el("span","phase-summary-dot");dot.style.background=color;
+      const info=el("div","phase-summary-data");
+      info.append(el("div","phase-summary-label",name));
+      const value=el("div","phase-summary-value","00:00:00");value.dataset.phaseValue=id;
+      info.append(value);cell.append(dot,info);grid.append(cell);
+    }
+  }
+  if(refreshNumbers){
+    for(const value of grid.querySelectorAll("[data-phase-value]")){
+      value.textContent=clock(sum(sessions.filter(x=>x.phase===value.dataset.phaseValue)));
+    }
+    $("progressHint").textContent=active?"● 計測中：バーのみ更新中。数字は工程切り替え・停止時に確定します。":"保存済みの工程時間です。";
+  }
+  return all;
+}
+function renderSnapshotViewer(){
+ const p=project(),own=p?snapshots.filter(x=>x.projectId===p.id):[],has=own.length>0;
+ const stage=$("workImage"),empty=$("workNoImage"),strip=$("snapshotStrip"),counter=$("snapshotPosition");
+ if(!has){if(p?.image){stage.src=p.image;stage.classList.remove("hidden");empty.classList.add("hidden")}else{stage.classList.add("hidden");empty.classList.remove("hidden")}counter.textContent=p?.image?"旧画像（引き継ぎ前）":"画像なし";strip.replaceChildren();$("snapshotNewer").disabled=true;$("snapshotOlder").disabled=true;$("snapshotDelete").disabled=true;return}
+ if(snapProject!==p.id){snapProject=p.id;snapIndex=0}
+ snapIndex=Math.min(snapIndex,own.length-1);const current=own[snapIndex];
+ const url=URL.createObjectURL(current.blob);stage.src=url;stage.onload=()=>URL.revokeObjectURL(url);stage.classList.remove("hidden");empty.classList.add("hidden");
+ counter.textContent=(snapIndex+1)+" / "+own.length+" · "+new Date(current.created).toLocaleString("ja-JP")+" · "+clock(current.seconds||0);
+ $("snapshotNewer").disabled=snapIndex===0;$("snapshotOlder").disabled=snapIndex>=own.length-1;$("snapshotDelete").disabled=imageLoading;
+ strip.replaceChildren();own.forEach((im,i)=>{const b=el("button","snapshot-thumb"+(i===snapIndex?" selected":"")),thumb=el("img");const u=URL.createObjectURL(im.blob);thumb.src=u;thumb.onload=()=>URL.revokeObjectURL(u);thumb.alt="制作画像 "+(own.length-i);b.append(thumb,el("small","",i===0?"最新":new Date(im.created).toLocaleDateString("ja-JP")));b.onclick=()=>{snapIndex=i;renderSnapshotViewer()};strip.append(b)});
+}
+function shiftSnapshot(step){const p=project();if(!p)return;const n=snapshots.filter(x=>x.projectId===p.id).length;snapIndex=Math.max(0,Math.min(n-1,snapIndex+step));renderSnapshotViewer()}
+async function deleteSelectedSnapshot(){
+ if(imageLoading)return;const p=project();if(!p)return;
+ const own=snapshots.filter(x=>x.projectId===p.id),selected=own[snapIndex];if(!selected)return;
+ const label=own.length===1?"最後の1枚です。作品には画像なしと表示されます。":"この画像だけ削除し、残りの"+(own.length-1)+"枚は保存します。";
+ if(!confirm("制作過程の画像を削除しますか？\n"+label+"\n\n作品と制作時間は消えません。"))return;
+ imageLoading=true;$("snapshotDelete").disabled=true;
+ try{
+  await ElabV2Images.remove(selected.id);
+  snapshots=(await ElabV2Images.all()).sort((a,b)=>b.created-a.created);
+  snapIndex=Math.min(snapIndex,Math.max(0,snapshots.filter(x=>x.projectId===p.id).length-1));
+  render();
+  $("snapshotNote").textContent="画像を1枚削除しました。作品と制作時間は保存されています。";
+ }catch(e){alert("画像を削除できませんでした: "+e.message)}
+ finally{imageLoading=false;$("snapshotDelete").disabled=!project()||!snapshots.some(x=>x.projectId===projectId)}
+}
+async function refreshSnapshots(){try{snapshots=(await ElabV2Images.all()).sort((a,b)=>b.created-a.created);render()}catch(e){$("snapshotNote").textContent="画像保管庫の読み出しに失敗: "+e.message}}
+async function addSnapshot(file,pid){if(imageLoading)return;imageLoading=true;$("snapshotNote").textContent="画像を保存中…";try{
+ const p=data.projects.find(x=>x.id===pid);if(!p)throw Error("作品が見つかりません");
+ const blob=await ElabV2Images.imageBlob(file);
+ const secs=sum(data.sessions.filter(s=>s.projectId===pid))+(running?.projectId===pid?(Date.now()-running.start)/1000:0);
+ const item={id:uid(),projectId:pid,created:Date.now(),seconds:secs,phase:running?.projectId===pid?running.phase:phase,blob};
+ await ElabV2Images.add(item);if(projectId===pid){snapProject=pid;snapIndex=0}
+ await refreshSnapshots();$("snapshotNote").textContent="保存済み · 新しい画像は左端に追加されます";
+ }catch(e){alert("画像を保存できませんでした: "+e.message);$("snapshotNote").textContent="画像の保存に失敗しました"}finally{imageLoading=false}}
+async function migrateLegacyImages(){for(const p of data.projects){if(!p.image)continue;try{if(!snapshots.some(x=>x.projectId===p.id&&x.legacy)){const resp=await fetch(p.image),blob=await resp.blob();await ElabV2Images.add({id:uid(),projectId:p.id,created:new Date(p.created||Date.now()).getTime(),seconds:0,phase:"play",legacy:true,blob})}const old=p.image;p.image=null;if(!save())p.image=old}catch(e){console.warn("旧画像の移行を見送りました",e)}}await refreshSnapshots()}
+function renderWork(){const p=project();$("workTitle").textContent=p?.name||"ホームから作品を選択してください";$("workImage").classList.toggle("hidden",!p?.image);$("workNoImage").classList.toggle("hidden",!!p?.image);if(p?.image)$("workImage").src=p.image;renderSnapshotViewer();renderPhases();const sessions=projectSessions();renderProgress($("projectProgress"),sessions);const currentRunning=running&&running.projectId===projectId;const pendingSeconds=currentRunning?Math.max(0,(Date.now()-running.start)/1000):0;const currentSession=currentRunning?Math.max(0,(Date.now()-(running.sessionStart||running.start))/1000):0;$("timer").textContent=clock(sum(sessions)+pendingSeconds);$("sessionTimer").textContent=clock(currentSession);$("timerStatus").textContent=currentRunning?"計測中・停止時に保存":"停止中・保存済み";$("toggleTimer").textContent=running?"■ ストップ":"▶ スタート";$("completeProject").disabled=!p||!!running;$("reopenProject").disabled=!p||!!running;$("deleteProject").disabled=!p||!!running;$("imageInput").disabled=!p}
+function renderEvents(){$("eventSp").textContent=sp();const area=$("eventsList");area.replaceChildren();EVENTS.forEach(e=>{const unlocked=data.unlocks.includes(e.id),card=el("div","event"+(unlocked?"":" locked")),title=el("strong","",e.title+" · "+e.cost+" SP"),body=el("p","note",unlocked?e.body:"未解放"),btn=el("button",unlocked?"secondary compact":"primary compact",unlocked?"解放済":"解放する");btn.disabled=unlocked||sp()<e.cost;btn.onclick=()=>{if(sp()<e.cost)return;data.unlocks.push(e.id);save();render()};card.append(title,body,btn);area.append(card)})}
+function renderRecords(){$("recordTotal").textContent=duration(total());const stats=$("phaseStats");stats.replaceChildren();for(const [id,name,color] of PHASES){const sec=sum(data.sessions.filter(s=>s.phase===id)),line=el("div","row spread");line.style.padding="10px 0";const label=el("span","",name);label.style.borderLeft="6px solid "+color;label.style.paddingLeft="10px";line.append(label,el("strong","",duration(sec)));stats.append(line)}const r=$("recentSessions");r.replaceChildren();for(const s of [...data.sessions].reverse().slice(0,10)){const p=data.projects.find(p=>p.id===s.projectId),ph=PHASES.find(x=>x[0]===s.phase);r.append(el("div","event",(new Date(s.start)).toLocaleDateString("ja-JP")+" · "+(p?.name||"削除した作品")+" · "+(ph?.[1]||"工程不明")+" · "+duration(s.seconds)))}if(!data.sessions.length)r.append(el("div","empty","記録はまだありません"))}
+function renderRestoreAudit(){const elAudit=$("restoreAudit");if(!elAudit)return;const seconds=sum(data.sessions),p=data.projects[0],projectSec=p?sum(data.sessions.filter(x=>x.projectId===p.id)):0,orphanCount=data.sessions.filter(x=>!data.projects.some(p=>p.id===x.projectId)).length;const status=(x)=>x?"✅":"❌";const rows=[["研究記録110件",data.sessions.length===110,data.sessions.length+"件"],["総時間19分07秒",Math.floor(seconds)===1147,clock(seconds)],["現在の作品1件",data.projects.length===1,data.projects.length+"件"],["作品時間11分56秒",Math.floor(projectSec)===716,clock(projectSec)],["画像2枚",snapshots.length===2,snapshots.length+"枚"],["削除作品の時間記録15件",orphanCount===15,orphanCount+"件"]];elAudit.replaceChildren();for(const [name,ok,value] of rows){const line=el("div","row spread",status(ok)+" "+name);line.style.padding="6px 0";line.append(el("strong","",value));elAudit.append(line)}if(rows.every(x=>x[1]))elAudit.append(el("p","note","✅ 件数と時間はバックアップと一致！ 画像の表示・切り替えと再読み込み後の保持も確認してください。"))}
+function render(){renderAssistant();const t=total();$("totalTime").textContent=duration(t);$("homeSummary").textContent="10分の研究につき1 SP · "+earned()+" SP獲得済み";const today=new Date().toLocaleDateString("sv-SE");const todaySessions=data.sessions.filter(s=>new Date(s.start).toLocaleDateString("sv-SE")===today);$("todayTime").textContent=duration(sum(todaySessions));$("activeDays").textContent=new Set(data.sessions.map(s=>new Date(s.start).toLocaleDateString("sv-SE"))).size+"日";$("spHeader").textContent="研究SP "+sp();renderGallery();renderWork();renderEvents();renderRecords();renderRestoreAudit()}
+document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>navigate(b.dataset.tab));$("newProject").onclick=()=>{if(running)stop();const name=prompt("作品の名前を入力","無題の研究");if(name===null)return;const p={id:uid(),name:name.trim()||"無題の研究",image:null,complete:false,created:new Date().toISOString()};data.projects.push(p);projectId=p.id;save();navigate("work")};$("backGallery").onclick=()=>{if(running)stop();navigate("home")};$("toggleTimer").onclick=()=>running?stop():start();$("completeProject").onclick=()=>{if(!project())return;project().complete=true;save();navigate("home")};$("reopenProject").onclick=()=>{if(!project())return;project().complete=false;save();render()};$("deleteProject").onclick=()=>{const p=project();if(!p||running)return;if(!confirm("作品「"+p.name+"」を削除しますか？\\n作品の画像は消えますが、制作時間は研究所に残ります。"))return;const old=data.projects;data.projects=old.filter(x=>x.id!==p.id);if(save()){const removedId=p.id;projectId=null;navigate("home");ElabV2Images.removeProject(removedId).then(refreshSnapshots).catch(e=>alert("作品は削除しましたが画像の整理が完了しませんでした: "+e.message))}else data.projects=old};$("imageInput").onchange=async e=>{const file=e.target.files?.[0],pid=projectId;e.target.value="";if(file&&pid)await addSnapshot(file,pid)};
+$("snapshotDelete").onclick=deleteSelectedSnapshot;$("snapshotOlder").onclick=()=>shiftSnapshot(1);$("snapshotNewer").onclick=()=>shiftSnapshot(-1);
+let touchX=null;$("snapshotStage").addEventListener("touchstart",e=>{touchX=e.touches[0]?.clientX??null},{passive:true});$("snapshotStage").addEventListener("touchend",e=>{if(touchX===null)return;const d=(e.changedTouches[0]?.clientX??touchX)-touchX;touchX=null;if(Math.abs(d)>45)shiftSnapshot(d<0?1:-1)},{passive:true});
+
+function dataUrl(blob){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error||Error("画像の読み出しに失敗しました"));reader.readAsDataURL(blob)})}
+async function backupSnapshots(){const result=[];for(const x of await ElabV2Images.all()){const {blob,...meta}=x;result.push({...meta,image:await dataUrl(blob)})}return result}
+async function importSnapshots(items){const records=[];for(const x of items){if(!x||typeof x.id!=="string"||typeof x.projectId!=="string"||!Number.isFinite(x.created)||typeof x.image!=="string"||!x.image.startsWith("data:image/"))throw Error("画像履歴が不正です");const blob=await (await fetch(x.image)).blob();if(blob.size>12*1024*1024)throw Error("画像サイズが大きすぎます");const {image,...meta}=x;records.push({...meta,blob})}return records}
+$("export").onclick=async()=>{try{
+ if(running){stop();if(running)throw Error("時間の保存が完了していません")}
+ const pack={...data,snapshotBackupVersion:1,snapshots:await backupSnapshots()};
+ const blob=new Blob([JSON.stringify(pack)],{type:"application/json"}),url=URL.createObjectURL(blob),a=el("a");a.href=url;a.download="elab-v2-complete-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
+ alert("時間と画像 "+pack.snapshots.length+"枚をまとめて書き出しました。iPadの「ファイル」に保存されたことを確認してください。");
+ }catch(e){alert("バックアップに失敗しました: "+e.message)}};
+$("importFile").onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{
+ const parsed=JSON.parse(await file.text());
+ if(parsed.version!==2||!Array.isArray(parsed.sessions)||!Array.isArray(parsed.projects)||!Array.isArray(parsed.unlocks)||!parsed.sessions.every(isSession)||!parsed.projects.every(p=>p&&typeof p.id==="string"&&typeof p.name==="string"&&(p.image==null||(typeof p.image==="string"&&p.image.startsWith("data:image/"))))||!parsed.unlocks.every(x=>typeof x==="string"))throw Error("V2形式ではありません");
+ const hasImagePack=parsed.snapshotBackupVersion===1&&Array.isArray(parsed.snapshots);
+ const imgs=hasImagePack?await importSnapshots(parsed.snapshots):[];
+ if(!hasImagePack&&snapshots.length&&!confirm("このバックアップには新形式の画像が含まれません。読み込むと現在の画像履歴が消えます。続けますか？"))return;
+ const ids=new Set(parsed.projects.map(p=>p.id));if(imgs.some(x=>!ids.has(x.projectId)))throw Error("画像が存在しない作品を参照しています");
+ if(!confirm("現在のV2データ（時間と画像）をバックアップの内容で置き換えますか？"))return;
+ if(running){stop();if(running)throw Error("計測中の時間を保存できません")}
+ const old=data,oldImgs=await ElabV2Images.all();
+ const {snapshots:discard,snapshotBackupVersion:discardVersion,...next}=parsed;
+ try{
+   await ElabV2Images.replaceAll(imgs);
+   data=next;data.activeRun=null;
+   if(!save())throw Error("時間データを保存できませんでした");
+   clearRun();projectId=null;snapProject=null;snapIndex=0;await refreshSnapshots();navigate("home");
+ }catch(err){data=old;try{await ElabV2Images.replaceAll(oldImgs)}catch(rollback){alert("画像の復元にも失敗しました。バックアップを保管して再試行してください: "+rollback.message)}throw err}
+ }catch(err){alert("読み込み失敗: "+err.message)}finally{e.target.value=""}};
+
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&running){/* 開始時刻を保持。復帰時に差分を表示 */}});setInterval(()=>{if(running){const elapsed=Math.max(0,(Date.now()-running.start)/1000);viewSeconds=Math.max(0,(Date.now()-(running.sessionStart||running.start))/1000);$("timer").textContent=clock(sum(projectSessions())+elapsed);$("sessionTimer").textContent=clock(viewSeconds);if(tab==="work")renderProgress($("projectProgress"),projectSessions(),false)}},250);
+render();recoverRun();render();refreshSnapshots().then(migrateLegacyImages);window.addEventListener("resize",()=>document.documentElement.style.setProperty("--topbar-height",document.querySelector(".top").getBoundingClientRect().height+"px"));
+</script></body></html>
